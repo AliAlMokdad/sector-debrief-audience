@@ -242,7 +242,7 @@
     const card = $('#t-geo-card');
     if (!card.dataset.wired) {
       card.dataset.wired = '1';
-      const go = id => { const li = document.getElementById('t-c-' + id); if (!li) return; card.querySelectorAll('li.hit').forEach(x => x.classList.remove('hit')); li.classList.add('hit'); if (EMBEDDED) { const r = li.getBoundingClientRect(); parent.postMessage({ type: 'sd-audience-scroll', top: r.top + scrollY, height: r.height }, '*'); } else li.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' }); clearTimeout(li._t); li._t = setTimeout(() => li.classList.remove('hit'), 2800); };
+      const go = id => { const li = document.getElementById('t-c-' + id); if (!li) return; card.querySelectorAll('li.hit').forEach(x => x.classList.remove('hit')); li.classList.add('hit'); if (EMBEDDED) { const r = li.getBoundingClientRect(); parent.postMessage({ type: 'sd-audience-scroll', top: r.top + scrollY, height: r.height }, '*'); } else window.scrollTo({ top: Math.max(0, li.getBoundingClientRect().top + scrollY - Math.max(0, (innerHeight - li.getBoundingClientRect().height) / 2)), behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); clearTimeout(li._t); li._t = setTimeout(() => li.classList.remove('hit'), 2800); };
       card.addEventListener('click', e => { const p = e.target.closest('.pin'); if (p) go(p.dataset.row); });
       card.addEventListener('keydown', e => { const p = e.target.closest('.pin'); if (p && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); go(p.dataset.row); } });
       const pinOf = e => { const li = e.target.closest('li[data-pin]'); return li ? document.getElementById('t-p-' + li.dataset.pin) : null; };
