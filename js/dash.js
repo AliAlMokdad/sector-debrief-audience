@@ -246,6 +246,15 @@
   show(viewOf(location.hash));
   if (EMBEDDED) {
     document.documentElement.classList.add('embedded');
+    // the host may ask where a part of the page sits, so it can scroll there
+    addEventListener('message', e => {
+      if (!e.data || e.data.type !== 'sd-audience-where') return;
+      if (e.origin !== 'https://thesectordebrief.com' && !e.origin.startsWith('http://localhost')) return;
+      const target = { map: '#t-geo-card' }[e.data.what]; if (!target) return;
+      if (!document.getElementById('all').classList.contains('active')) show('all');
+      const el = document.querySelector(target); if (!el) return;
+      parent.postMessage({ type: 'sd-audience-pos', what: e.data.what, top: el.getBoundingClientRect().top + scrollY }, e.origin);
+    });
     const report = () => parent.postMessage({ type: 'sd-audience-height', height: Math.ceil(document.body.getBoundingClientRect().height) }, '*');
     new ResizeObserver(report).observe(document.body);
     addEventListener('load', report);
