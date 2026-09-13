@@ -10,6 +10,7 @@
   const dm = iso => { const d = new Date(iso + 'T00:00:00'); return `${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}`; };
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
   const $ = sel => document.querySelector(sel);
+  const EMBEDDED = window.parent !== window;
   const NS = 'http://www.w3.org/2000/svg';
   const el = (parent, tag, attrs = {}, text) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text !== undefined) e.textContent = text; parent.appendChild(e); return e; };
   const niceMax = v => { const p = Math.pow(10, Math.floor(Math.log10(Math.max(1, v)))); const m = v / p; return ([1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10].find(s => m <= s) || 10) * p; };
@@ -213,7 +214,7 @@
     const card = $('#t-geo-card');
     if (!card.dataset.wired) {
       card.dataset.wired = '1';
-      const go = id => { const li = document.getElementById('t-c-' + id); if (!li) return; card.querySelectorAll('li.hit').forEach(x => x.classList.remove('hit')); li.classList.add('hit'); li.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' }); clearTimeout(li._t); li._t = setTimeout(() => li.classList.remove('hit'), 2800); };
+      const go = id => { const li = document.getElementById('t-c-' + id); if (!li) return; card.querySelectorAll('li.hit').forEach(x => x.classList.remove('hit')); li.classList.add('hit'); if (EMBEDDED) { const r = li.getBoundingClientRect(); parent.postMessage({ type: 'sd-audience-scroll', top: r.top + scrollY, height: r.height }, '*'); } else li.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' }); clearTimeout(li._t); li._t = setTimeout(() => li.classList.remove('hit'), 2800); };
       card.addEventListener('click', e => { const p = e.target.closest('.pin'); if (p) go(p.dataset.row); });
       card.addEventListener('keydown', e => { const p = e.target.closest('.pin'); if (p && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); go(p.dataset.row); } });
       const pinOf = e => { const li = e.target.closest('li[data-pin]'); return li ? document.getElementById('t-p-' + li.dataset.pin) : null; };
@@ -243,4 +244,12 @@
   addEventListener('afterprint', () => show(viewOf(location.hash)));
   if (!D.website) document.querySelector('.tab[data-view="website"]').hidden = true;
   show(viewOf(location.hash));
+  if (EMBEDDED) {
+    document.documentElement.classList.add('embedded');
+    const report = () => parent.postMessage({ type: 'sd-audience-height', height: document.documentElement.scrollHeight }, '*');
+    new ResizeObserver(report).observe(document.body);
+    addEventListener('load', report);
+    document.fonts && document.fonts.ready.then(report);
+    report();
+  }
 })();

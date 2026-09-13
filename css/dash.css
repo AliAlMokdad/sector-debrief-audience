@@ -1059,3 +1059,6 @@ body[data-view=video] { --tint: rgba(44, 91, 170, .10); }
 body[data-view=audio] { --tint: rgba(184, 58, 42, .09); }
 body[data-view=website] { --tint: rgba(42, 69, 48, .10); }
 @media print { .bg { display: none; } }
+
+/* inside a host page: no scrollbars of its own, the host sizes the frame to the content */
+html.embedded, html.embedded body { overflow: hidden; }
