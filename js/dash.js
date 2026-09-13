@@ -47,6 +47,9 @@
     el(s, 'path', { d: path(total) + `L${x(t1).toFixed(1)},${y(0).toFixed(1)}L${x(t0).toFixed(1)},${y(0).toFixed(1)}Z`, class: 'area' + (part ? ' b' : '') });
     el(s, 'path', { d: path(total), class: 'line' + (part ? ' b' : '') });
     if (part) el(s, 'path', { d: path(part), class: 'line' });
+    const lastR = series[series.length - 1], lx = x(t1), ly = y(lastR[total] || 0);
+    el(s, 'circle', { cx: lx, cy: ly, r: 4, class: 'end-dot' });
+    if ((lastR[total] || 0) > 0) el(s, 'text', { x: lx - 8, y: Math.max(m.t + 10, ly - 10), 'text-anchor': 'end', class: 'end-val' }, n(lastR[total]));
     host.appendChild(s);
   }
 
