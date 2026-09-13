@@ -1062,3 +1062,8 @@ body[data-view=website] { --tint: rgba(42, 69, 48, .10); }
 
 /* inside a host page: no scrollbars of its own, the host sizes the frame to the content */
 html.embedded, html.embedded body { overflow: hidden; }
+
+/* larger platform marks in the tab bar */
+.tab svg { width: 25px; height: 25px; }
+.tab { gap: 10px; }
+.tabs { grid-template-columns: repeat(4, 134px); }
