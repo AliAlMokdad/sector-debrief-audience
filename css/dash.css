@@ -1027,3 +1027,12 @@ body {
 .maplegend .ring { border-color: #982D25; background: transparent; }
 .list.tri.tot li { grid-template-columns: minmax(160px, 1fr) minmax(220px, 2fr) 76px 76px; }
 .list.two { justify-content: flex-start; gap: 26px; padding-top: 6px; }
+
+
+/* the one total: a plum card with the three platform colours along its top edge */
+.summary > .kpi.hero { position: relative; display: flex; flex-direction: column; justify-content: center; min-width: 300px; padding: 22px 28px; border: 0; border-top: 0; border-radius: var(--r); background: linear-gradient(135deg, #3E2445 0%, #5B3A63 58%, #6B4474 100%); color: #FAF6EA; box-shadow: 0 1px 0 rgba(26, 22, 20, .06), 0 22px 44px -24px rgba(67, 40, 74, .55); overflow: hidden; }
+.summary > .kpi.hero::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: linear-gradient(90deg, var(--cobalt) 0 34%, var(--crimson) 34% 67%, var(--forest) 67% 100%); }
+.summary > .kpi.hero::after { content: ''; position: absolute; right: -40px; bottom: -70px; width: 190px; height: 190px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, rgba(232, 184, 44, .28), rgba(232, 184, 44, 0) 70%); pointer-events: none; }
+.summary > .kpi.hero .l { color: #E8B82C; }
+.summary > .kpi.hero .v { color: #FFFDF7; font-size: 52px; letter-spacing: -0.03em; }
+.summary > .kpi.hero:hover, .summary > .kpi.hero:first-child:hover { border-color: transparent; }
