@@ -1,5 +1,8 @@
 /* Renders the audience page from data/audience.json. Inline SVG and HTML, no libraries. */
 (async function () {
+  // a where-request that arrives before the page has rendered is kept and answered once it has
+  let pendingWhere = null, onWhere = null;
+  if (window.parent !== window) addEventListener('message', e => { if (e.data && e.data.type === 'sd-audience-where') { if (onWhere) onWhere(e); else pendingWhere = e; } });
   const D = await fetch('data/audience.json', { cache: 'no-store' }).then(r => r.json());
   const WORLD = await fetch('data/world.json', { cache: 'no-store' }).then(r => r.json()).catch(() => null);
   const fmt = new Intl.NumberFormat('en-GB');
@@ -10,6 +13,8 @@
   const dm = iso => { const d = new Date(iso + 'T00:00:00'); return `${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}`; };
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
   const $ = sel => document.querySelector(sel);
+  // the browser can drop a smooth scroll in the first seconds after a load, so if nothing moved, go there directly
+  const scrollPage = to => { const y0 = scrollY, reduced = matchMedia('(prefers-reduced-motion: reduce)').matches; window.scrollTo({ top: to, behavior: reduced ? 'auto' : 'smooth' }); if (!reduced) setTimeout(() => { if (Math.abs(scrollY - y0) < 2 && Math.abs(to - y0) > 2) window.scrollTo({ top: to, behavior: 'auto' }); }, 240); };
   const EMBEDDED = window.parent !== window && !new URLSearchParams(location.search).has('standalone');
   const NS = 'http://www.w3.org/2000/svg';
   const el = (parent, tag, attrs = {}, text) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text !== undefined) e.textContent = text; parent.appendChild(e); return e; };
@@ -74,7 +79,8 @@
   function columns(host, rows, opts = {}) {
     host.innerHTML = '';
     // on a phone the columns render wider than the card and the card scrolls sideways, so every month keeps a readable label
-    const W = Math.max(width(host), matchMedia('(max-width: 640px)').matches ? 560 : 0), H = opts.h || 200, m = { l: 4, r: 4, t: 24, b: 38 };
+    // narrow columns at any width: the chart renders wider than the card and the card scrolls sideways
+    const hostW = width(host), W = hostW / rows.length < 52 ? Math.max(hostW, rows.length * 56) : hostW, H = opts.h || 200, m = { l: 4, r: 4, t: 24, b: 38 };
     const s = el(document.createDocumentFragment(), 'svg', { viewBox: `0 0 ${W} ${H}`, width: W, height: H, class: 'chart', role: 'img', 'aria-label': opts.label || '' });
     const max = Math.max(1, ...rows.map(r => r.count)), slot = Math.min(168, (W - m.l - m.r) / rows.length), bw = Math.min(96, slot * .72), x0 = m.l + (W - m.l - m.r - slot * rows.length) / 2;
     const y = v => H - m.b - v / max * (H - m.t - m.b);
@@ -92,6 +98,7 @@
         if (note) el(s, 'text', { x: xx + bw / 2, y: H - 7, 'text-anchor': 'middle', class: 'note' }, note);
       }
     });
+    if (W > hostW) { s.style.width = W + 'px'; s.style.maxWidth = 'none'; host.classList.add('wide'); } else host.classList.remove('wide');
     host.appendChild(s);
   }
 
@@ -242,7 +249,7 @@
     const card = $('#t-geo-card');
     if (!card.dataset.wired) {
       card.dataset.wired = '1';
-      const go = id => { const li = document.getElementById('t-c-' + id); if (!li) return; card.querySelectorAll('li.hit').forEach(x => x.classList.remove('hit')); li.classList.add('hit'); if (EMBEDDED) { const r = li.getBoundingClientRect(); parent.postMessage({ type: 'sd-audience-scroll', top: r.top + scrollY, height: r.height }, '*'); } else window.scrollTo({ top: Math.max(0, li.getBoundingClientRect().top + scrollY - Math.max(0, (innerHeight - li.getBoundingClientRect().height) / 2)), behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); clearTimeout(li._t); li._t = setTimeout(() => li.classList.remove('hit'), 2800); };
+      const go = id => { const li = document.getElementById('t-c-' + id); if (!li) return; const tr = li.closest('.trunc'); if (tr && !tr.classList.contains('open')) { tr.classList.add('open'); const mb = tr.nextElementSibling; if (mb && mb.classList.contains('more')) mb.setAttribute('aria-expanded', 'true'); } card.querySelectorAll('li.hit').forEach(x => x.classList.remove('hit')); li.classList.add('hit'); if (EMBEDDED) { const r = li.getBoundingClientRect(); parent.postMessage({ type: 'sd-audience-scroll', top: r.top + scrollY, height: r.height }, '*'); } else scrollPage(Math.max(0, li.getBoundingClientRect().top + scrollY - Math.max(0, (innerHeight - li.getBoundingClientRect().height) / 2))); clearTimeout(li._t); li._t = setTimeout(() => li.classList.remove('hit'), 2800); };
       card.addEventListener('click', e => { const p = e.target.closest('.pin'); if (p) go(p.dataset.row); });
       card.addEventListener('keydown', e => { const p = e.target.closest('.pin'); if (p && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); go(p.dataset.row); } });
       const pinOf = e => { const li = e.target.closest('li[data-pin]'); return li ? document.getElementById('t-p-' + li.dataset.pin) : null; };
@@ -267,23 +274,31 @@
   document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => show(t.dataset.view)));
   $('.tabs').addEventListener('keydown', e => { if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return; const tabs = [...document.querySelectorAll('.tab:not([hidden])')]; const i = tabs.findIndex(t => t.getAttribute('aria-selected') === 'true'); const next = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length].dataset.view; show(next); document.querySelector(`.tab[data-view="${next}"]`).focus(); e.preventDefault(); });
   addEventListener('hashchange', () => show(viewOf(location.hash)));
-  let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { for (const v in rendered) { const p = document.getElementById(v); p.classList.add('settled'); if (p.classList.contains('active')) RENDER[v](); else rendered[v] = false; } }, 150); });
+  let rt, lastW = innerWidth; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if (innerWidth === lastW) return; lastW = innerWidth; for (const v in rendered) { const p = document.getElementById(v); p.classList.add('settled'); if (p.classList.contains('active')) RENDER[v](); else rendered[v] = false; } }, 150); });
   addEventListener('beforeprint', () => { document.querySelectorAll('.panel').forEach(p => p.classList.add('active')); for (const v in RENDER) { RENDER[v](); rendered[v] = true; } });
   addEventListener('afterprint', () => show(viewOf(location.hash)));
   if (!D.website) document.querySelector('.tab[data-view="website"]').hidden = true;
   show(viewOf(location.hash));
-  if (EMBEDDED) {
-    document.documentElement.classList.add('embedded');
-    // the host may ask where a part of the page sits, so it can scroll there
-    addEventListener('message', e => {
+  // an embedded frame reports its height to the host; the report goes out before any position reply, so the host can scroll within the full height
+  const report = () => { if (EMBEDDED) parent.postMessage({ type: 'sd-audience-height', height: Math.ceil(document.body.getBoundingClientRect().height) }, '*'); };
+  // once the visitor has picked a tab or scrolled, a late where-request from the host is ignored rather than moving the page under them
+  let userNav = false; document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => { userNav = true; }));
+  ['wheel', 'touchstart', 'keydown'].forEach(t => addEventListener(t, () => { userNav = true; }, { passive: true }));
+  if (window.parent !== window) {
+    // the host may ask where a part of the page sits: an embedded frame replies with the position, a standalone frame scrolls itself
+    onWhere = e => {
       if (!e.data || e.data.type !== 'sd-audience-where') return;
       if (e.origin !== 'https://thesectordebrief.com' && !e.origin.startsWith('http://localhost')) return;
-      const target = { map: '#t-geo-card' }[e.data.what]; if (!target) return;
+      const target = { map: '#t-geo-card' }[e.data.what]; if (!target || userNav) return;
       if (!document.getElementById('all').classList.contains('active')) show('all');
       const el = document.querySelector(target); if (!el) return;
-      parent.postMessage({ type: 'sd-audience-pos', what: e.data.what, top: el.getBoundingClientRect().top + scrollY }, e.origin);
-    });
-    const report = () => parent.postMessage({ type: 'sd-audience-height', height: Math.ceil(document.body.getBoundingClientRect().height) }, '*');
+      if (EMBEDDED) { report(); parent.postMessage({ type: 'sd-audience-pos', what: e.data.what, top: el.getBoundingClientRect().top + scrollY }, e.origin); }
+      else scrollPage(Math.max(0, el.getBoundingClientRect().top + scrollY - 12));
+    };
+    if (pendingWhere) { const e = pendingWhere; pendingWhere = null; onWhere(e); }
+  }
+  if (EMBEDDED) {
+    document.documentElement.classList.add('embedded');
     new ResizeObserver(report).observe(document.body);
     addEventListener('load', report);
     document.fonts && document.fonts.ready.then(report);

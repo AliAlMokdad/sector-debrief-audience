@@ -1122,7 +1122,7 @@ html.embedded, html.embedded body { overflow: hidden; }
   .list.tri.tot li, .list.tri.num li { grid-template-columns: minmax(0, 1fr) 76px 58px 58px; gap: 8px; min-height: 46px; }
   #v-month, #w-month { overflow-x: auto; overflow-y: hidden; margin: 0 -16px; padding: 0 16px; scrollbar-width: none; }
   #v-month::-webkit-scrollbar, #w-month::-webkit-scrollbar { display: none; }
-  #v-month svg, #w-month svg { display: block; width: 560px; max-width: none; }
+  #v-month svg, #w-month svg { display: block; }
   .list.tri.tot li { grid-template-columns: minmax(0, 1fr) 68px 52px 52px; gap: 6px; }
   .list.tri.tot .tc .t { display: none; }
   .list.tri.tot .tc .c { width: auto; }
@@ -1245,3 +1245,7 @@ html.embedded, html.embedded body { overflow: hidden; }
   .list:not(.leg):not(.two):not(.tri):not(.ranked) li.sep { height: 0; min-height: 0; margin: 6px 0 0; padding: 0; border-top: 0; }
   .list:not(.leg):not(.two):not(.tri):not(.ranked) li:last-child { border-bottom: 0; }
 }
+
+/* a column chart wider than its card scrolls sideways at any width */
+.wide { overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+.wide::-webkit-scrollbar { display: none; }
