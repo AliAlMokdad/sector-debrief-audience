@@ -148,11 +148,61 @@
     table($('#w-month-card'), 'Impressions by month', ['Month', 'Impressions'], Wb.monthly.map(r => [r.month, r.count]));
   }
 
+  function renderAll() {
+    const Wb = D.website, P = A.audience_page;
+    const vt = V.total_views, at = A.total_plays_downloads, wt = Wb ? Wb.total_impressions : 0, all = vt + at + wt;
+    const wPeriod = Wb ? `${dm(Wb.period_start)} to ${dm(Wb.period_end)}` : '';
+    const kp = (cls, l, v, sub) => kpi(l, v, sub).replace('class="kpi"', 'class="kpi ' + cls + '"');
+    $('#t-summary').innerHTML = kp('pv', 'YouTube views', n(vt), vPeriod) + kp('pa', 'Podcast plays and downloads', n(at), aPeriod) + (Wb ? kp('pw', 'Google Search impressions', n(wt), wPeriod) : '');
+
+    // reach: a donut of the three totals, true to scale
+    const parts = [{ k: 'pv', name: 'Video', v: vt, c: 'var(--cobalt)' }, { k: 'pa', name: 'Audio', v: at, c: 'var(--crimson)' }].concat(Wb ? [{ k: 'pw', name: 'Website', v: wt, c: 'var(--forest)' }] : []);
+    const host = $('#t-share'); host.innerHTML = '';
+    const S = 220, cx = S / 2, cy = S / 2, r = 84, sw = 26, C = 2 * Math.PI * r;
+    const svg = el(document.createDocumentFragment(), 'svg', { viewBox: `0 0 ${S} ${S}`, class: 'donut', role: 'img', 'aria-label': 'All counts by platform' });
+    let off = 0;
+    parts.forEach(p => { const len = p.v / all * C; el(svg, 'circle', { cx, cy, r, fill: 'none', stroke: p.c, 'stroke-width': sw, 'stroke-dasharray': `${len.toFixed(3)} ${(C - len).toFixed(3)}`, 'stroke-dashoffset': (-off).toFixed(3), transform: `rotate(-90 ${cx} ${cy})` }); off += len; });
+    el(svg, 'text', { x: cx, y: cy + 10, 'text-anchor': 'middle', class: 'donut-v' }, n(all));
+    host.appendChild(svg);
+    host.insertAdjacentHTML('beforeend', `<ul class="list leg">${parts.map(p => `<li><i style="background:${p.c}"></i><span class="n">${p.name}</span><span class="c">${n(p.v)}</span><span class="v">${pc(p.v / all * 100)}</span></li>`).join('')}</ul>`);
+    table($('#t-share-card'), 'Total by platform', ['Platform', 'Count', 'Share %'], parts.map(p => [p.name, p.v, (p.v / all * 100).toFixed(2)]));
+
+    // gender: video share of views beside audio share of Spotify listeners
+    const male = V.age_gender.reduce((a, b) => a + b.male_pct, 0), female = V.age_gender.reduce((a, b) => a + b.female_pct, 0);
+    const ag = k => (P.gender.find(g => g.label === k) || { pct: null }).pct;
+    const grows = [{ label: 'Male', v: male, a: ag('Male') }, { label: 'Female', v: female, a: ag('Female') }].concat(P.gender.filter(g => !['Male', 'Female'].includes(g.label) && g.pct > 0).map(g => ({ label: g.label, v: null, a: g.pct })));
+    $('#t-gender-p').innerHTML = 'Video · YouTube reported views &nbsp;·&nbsp; Audio · Spotify listeners, all time';
+    const bar = (k, v) => v === null ? '<span class="t none"></span>' : `<span class="t"><span class="f ${k}${v > 0 ? ' nz' : ''}" style="--w:${Math.min(100, v).toFixed(2)}%"></span></span>`;
+    $('#t-gender').innerHTML = `<ul class="list two"><li class="heads"><span></span><span></span><span class="pv">Video</span><span class="pa">Audio</span></li>${grows.map(g => `<li><span class="n">${esc(g.label)}</span><span class="tt">${bar('pv', g.v)}${bar('pa', g.a)}</span><span class="v pv">${g.v === null ? '' : pc(g.v)}</span><span class="v pa">${g.a === null ? '' : pc(g.a)}</span></li>`).join('')}</ul>`;
+    table($('#t-gender-card'), 'Gender by platform', ['Group', 'Video share of views %', 'Audio share of Spotify listeners %'], grows.map(g => [g.label, g.v === null ? '' : g.v.toFixed(2), g.a === null ? '' : g.a.toFixed(2)]));
+
+    // age: each platform keeps its own bands
+    $('#t-age-p').innerHTML = 'Video · YouTube reported views &nbsp;·&nbsp; Audio · Spotify listeners, all time';
+    $('#t-age').innerHTML = '<div class="pv"><p class="hd">Video</p><div id="t-age-v"></div></div><div class="pa"><p class="hd">Audio</p><div id="t-age-a"></div></div>';
+    list($('#t-age-v'), V.age_gender.map(b => ({ label: b.band + ' years', v: b.male_pct + b.female_pct, text: pc(b.male_pct + b.female_pct) })));
+    list($('#t-age-a'), P.age.filter(b => b.band !== 'Unknown').map(b => ({ label: b.band + ' years', v: b.pct, text: pc(b.pct) })));
+    table($('#t-age-card'), 'Age by platform', ['Platform', 'Band', 'Share %'], V.age_gender.map(b => ['Video', b.band, (b.male_pct + b.female_pct).toFixed(2)]).concat(P.age.map(b => ['Audio', b.band, b.pct.toFixed(2)])));
+
+    // countries: one row per country, three shares on one shared scale
+    const m = new Map(); const put = (name, k, v) => { if (!m.has(name)) m.set(name, { name, v: null, a: null, w: null }); m.get(name)[k] = v; };
+    V.geography.forEach(g => put(g.name, 'v', g.views / vt * 100));
+    A.geography_pct.forEach(g => put(g.name, 'a', g.pct));
+    if (Wb) Wb.countries.forEach(g => put(g.name, 'w', g.impressions / wt * 100));
+    const top = r => Math.max(r.v ?? -1, r.a ?? -1, r.w ?? -1);
+    const rows = [...m.values()].sort((x, y) => top(y) - top(x) || x.name.localeCompare(y.name));
+    const scale = Math.max(...rows.flatMap(r => [r.v, r.a, r.w]).filter(x => x !== null));
+    const cell = (k, v) => v === null ? '<span class="cell"></span>' : `<span class="cell"><span class="t"><span class="f ${k}${v > 0 ? ' nz' : ''}" style="--w:${(v / scale * 100).toFixed(2)}%"></span></span><span class="v">${pc(v)}</span></span>`;
+    const half = Math.ceil(rows.length / 2);
+    const block = rs => `<ul class="list tri"><li class="heads"><span></span><span class="pv">Video</span><span class="pa">Audio</span><span class="pw">Website</span></li>${rs.map(r => `<li><span class="n">${esc(r.name)}</span>${cell('pv', r.v)}${cell('pa', r.a)}${cell('pw', r.w)}</li>`).join('')}</ul>`;
+    $('#t-geo').innerHTML = `<div class="twin">${block(rows.slice(0, half))}${block(rows.slice(half))}</div>`;
+    table($('#t-geo-card'), 'Countries by platform', ['Country', 'Video share of views %', 'Audio share of plays and downloads %', 'Website share of impressions %'], rows.map(r => [r.name, r.v === null ? '' : r.v.toFixed(2), r.a === null ? '' : r.a.toFixed(2), r.w === null ? '' : r.w.toFixed(2)]));
+  }
+
   $('#brand-sub').textContent = `The Sector Debrief · updated ${dm(D.sources[0].exported_at).replace(' Sep ', ' September ')} · updated monthly`;
 
   const rendered = {};
-  const RENDER = { video: renderVideo, audio: renderAudio, website: renderWebsite };
-  const viewOf = hash => ['audio', 'website'].includes(hash.slice(1)) ? hash.slice(1) : 'video';
+  const RENDER = { all: renderAll, video: renderVideo, audio: renderAudio, website: renderWebsite };
+  const viewOf = hash => ['video', 'audio', 'website'].includes(hash.slice(1)) ? hash.slice(1) : 'all';
   function show(view) {
     document.querySelectorAll('.tab').forEach(t => { const on = t.dataset.view === view; t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1; });
     document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === view));

@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/dash.css?v=2026-09-13j">
+<link rel="stylesheet" href="css/dash.css?v=2026-09-13k">
 <!--
 ANTI_SLOP_BRIEF
 bold move: none by design. The model is YouTube Studio and Spotify for Creators: plain cards, complete lists with % shares, one colour per platform. Restraint is the decision.
@@ -33,7 +33,11 @@ verifiable: every number comes from data/audience.json, built by build/build_dat
       <div><h1>Audience<svg class="swash" viewBox="0 0 160 14" aria-hidden="true"><path d="M4,9 C40,2 110,2 156,7" stroke="#E8B82C" stroke-width="7" fill="none" stroke-linecap="round"/></svg></h1><p id="brand-sub">The Sector Debrief</p></div>
     </div>
     <div class="tabs" role="tablist" aria-label="Platform">
-      <button class="tab" role="tab" data-view="video" aria-selected="true" aria-controls="video">
+      <button class="tab" role="tab" data-view="all" aria-selected="true" aria-controls="all">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7.6" r="4.6" fill="#B83A2A"/><circle cx="6.6" cy="15.6" r="4.6" fill="#2C5BAA"/><circle cx="17.4" cy="15.6" r="4.6" fill="#2A4530"/></svg>
+        All
+      </button>
+      <button class="tab" role="tab" data-view="video" aria-selected="false" aria-controls="video">
         <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="1.5" y="4.5" width="21" height="15" rx="4.5" fill="#FF0000"/><path d="M10 8.6v6.8l5.6-3.4z" fill="#fff"/></svg>
         Video
       </button>
@@ -50,7 +54,18 @@ verifiable: every number comes from data/audience.json, built by build/build_dat
 </header>
 
 <main>
-<section class="panel active" id="video" data-view="video" role="tabpanel" aria-label="Video">
+<section class="panel active" id="all" data-view="all" role="tabpanel" aria-label="All platforms">
+  <div class="wrap">
+    <div class="summary" id="t-summary"></div>
+    <div class="grid">
+      <div class="card c4" id="t-share-card"><h2>Total by platform</h2><div id="t-share"></div></div>
+      <div class="card c8" id="t-gender-card"><h2>Gender</h2><p class="p" id="t-gender-p"></p><div id="t-gender"></div></div>
+      <div class="card c12" id="t-age-card"><h2>Age</h2><p class="p" id="t-age-p"></p><div class="duo" id="t-age"></div></div>
+      <div class="card c12" id="t-geo-card"><h2>Countries</h2><div id="t-geo"></div></div>
+    </div>
+  </div>
+</section>
+<section class="panel" id="video" data-view="video" role="tabpanel" aria-label="Video">
   <div class="wrap">
     <div class="summary" id="v-summary"></div>
     <div class="grid">
@@ -94,6 +109,6 @@ verifiable: every number comes from data/audience.json, built by build/build_dat
 </main>
 
 
-<script src="js/dash.js?v=2026-09-13j"></script>
+<script src="js/dash.js?v=2026-09-13k"></script>
 </body>
 </html>
