@@ -972,3 +972,58 @@ body {
 .list.tri li { grid-template-columns: minmax(0, 1.1fr) repeat(2, minmax(0, 1fr)); }
 @media (prefers-reduced-motion: reduce) { .map .pin { animation: none; } }
 @media print { .panel, .panel *, .summary .kpi { animation: none !important; } }
+
+
+/* All: numeric country rows, total bars on age, pins that talk to the list */
+.heads .pt { color: var(--plum); }
+.list.tri.num li { grid-template-columns: minmax(0, 1fr) 92px 68px 68px; gap: 12px; min-height: 28px; }
+.list.tri.num .c { text-align: right; font-weight: 500; color: var(--ink); }
+.list.tri.num .v { text-align: right; color: var(--ink); font-weight: 400; }
+.list.tri.tot li { grid-template-columns: minmax(0, 1fr) minmax(220px, 46%) 76px 76px; gap: 16px; min-height: 38px; }
+.list.tri.tot .tc { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.list.tri.tot .tc .t { flex: 1; background: var(--track); }
+.list.tri.tot .tc .f { background: var(--plum); }
+.list.tri.tot .tc .c { width: 92px; text-align: right; font-weight: 500; color: var(--ink); white-space: nowrap; }
+.list.tri.tot .v { text-align: right; color: var(--ink); font-weight: 400; }
+.list.tri li.hit { background: var(--hover); box-shadow: inset 3px 0 0 var(--plum); transition: background-color .3s ease, box-shadow .3s ease; }
+.map .sea { stroke: rgba(26, 22, 20, .10); stroke-width: .8; }
+.map .grat { fill: none; stroke: #1A1614; stroke-opacity: .075; stroke-width: .6; }
+.map .land { fill: #E6DDC8; stroke: rgba(255, 253, 247, .9); }
+.map .pin { cursor: pointer; outline: none; }
+.map .pin circle { transition: fill-opacity .18s ease, stroke-width .18s ease; }
+.map .pin.on circle.pv, .map .pin:hover circle.pv { fill-opacity: 1; }
+.map .pin.on circle.pa, .map .pin:hover circle.pa { stroke-width: 3; fill-opacity: .38; }
+.map .pin:focus-visible circle.pv, .map .pin:focus-visible circle.pa { stroke: var(--ink); stroke-width: 2; }
+.map .pin.on circle.core, .map .pin:hover circle.core { fill: var(--ink); }
+
+
+/* style check: a ground with the logo's colours in it, and land that stands off the paper */
+body {
+  background:
+    radial-gradient(1200px 680px at 100% -12%, rgba(232, 184, 44, .22), transparent 60%),
+    radial-gradient(900px 620px at 92% 38%, rgba(176, 64, 90, .10), transparent 62%),
+    radial-gradient(1000px 640px at -12% 104%, rgba(90, 95, 168, .16), transparent 60%),
+    radial-gradient(760px 480px at 50% 108%, rgba(200, 154, 60, .12), transparent 60%),
+    radial-gradient(700px 460px at -6% 6%, rgba(91, 58, 99, .09), transparent 60%),
+    linear-gradient(180deg, #FBF6EA 0%, #F7F1E3 100%);
+}
+.bg .stroke { opacity: .22; filter: blur(.6px); }
+.card, .kpi { background: rgba(255, 253, 247, .96); border-color: rgba(225, 218, 203, .9); box-shadow: 0 1px 0 rgba(26, 22, 20, .04), 0 18px 40px -26px rgba(67, 40, 74, .30); }
+.map .land { fill: url(#landg); stroke: rgba(255, 253, 247, .85); stroke-width: .8; }
+.map .sea { stroke: rgba(90, 95, 168, .22); stroke-width: 1; }
+.map .grat { stroke: #5A5FA8; stroke-opacity: .16; }
+.map .pin circle.pv { fill: var(--cobalt); fill-opacity: .92; stroke: #FFFDF7; stroke-width: 1.4; }
+.map .pin circle.pa { fill: #FFFDF7; fill-opacity: .55; stroke: var(--crimson); stroke-width: 2; }
+.map .pin circle.core { fill: #FFFDF7; }
+.maplegend .ring { background: rgba(255, 253, 247, .6); }
+.map .pin circle.halo { fill: none; stroke: #FFFDF7; stroke-width: 4.2; }
+.map .pin circle.pv { stroke-width: 1.8; }
+
+/* after the design check */
+.bg .stroke { opacity: .18; }
+#t-geo { --cobalt: #20467F; --crimson: #982D25; }
+.map .pin circle.pa { fill: none; }
+.maplegend .dot { background: #20467F; opacity: 1; }
+.maplegend .ring { border-color: #982D25; background: transparent; }
+.list.tri.tot li { grid-template-columns: minmax(160px, 1fr) minmax(220px, 2fr) 76px 76px; }
+.list.two { justify-content: flex-start; gap: 26px; padding-top: 6px; }

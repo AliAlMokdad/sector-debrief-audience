@@ -176,33 +176,53 @@
     $('#t-gender').innerHTML = `<ul class="list two"><li class="heads"><span></span><span></span><span class="pv">Video</span><span class="pa">Audio</span></li>${grows.map((g, i) => `<li style="--i:${i}"><span class="n">${esc(g.label)}</span><span class="tt">${bar('pv', g.v)}${bar('pa', g.a)}</span><span class="v pv">${g.v === null ? '' : pc(g.v)}</span><span class="v pa">${g.a === null ? '' : pc(g.a)}</span></li>`).join('')}</ul>`;
     table($('#t-gender-card'), 'Gender by platform', ['Group', 'Video share of views %', 'Audio share of Spotify listeners %'], grows.map(g => [g.label, g.v === null ? '' : g.v.toFixed(2), g.a === null ? '' : g.a.toFixed(2)]));
 
-    // age: each platform keeps its own bands
-    $('#t-age').innerHTML = '<div class="pv"><p class="hd">Video</p><div id="t-age-v"></div></div><div class="pa"><p class="hd">Audio</p><div id="t-age-a"></div></div>';
-    list($('#t-age-v'), V.age_gender.map(b => ({ label: b.band + ' years', v: b.male_pct + b.female_pct, text: pc(b.male_pct + b.female_pct) })));
-    list($('#t-age-a'), P.age.filter(b => b.band !== 'Unknown').map(b => ({ label: b.band + ' years', v: b.pct, text: pc(b.pct) })));
-    table($('#t-age-card'), 'Age by platform', ['Platform', 'Band', 'Share %'], V.age_gender.map(b => ['Video', b.band, (b.male_pct + b.female_pct).toFixed(2)]).concat(P.age.map(b => ['Audio', b.band, b.pct.toFixed(2)])));
+    // age: Spotify's bands spread evenly by year onto YouTube's bands, and a total for each band
+    const span = band => { const lo = parseInt(band, 10); const hi = band.includes('+') ? 120 : parseInt(band.split(' to ')[1], 10); return [lo, hi]; };
+    const SPOT = { '0 to 17': [13, 17], '18 to 22': [18, 22], '23 to 27': [23, 27], '28 to 34': [28, 34], '35 to 44': [35, 44], '45 to 59': [45, 59], '60+': [60, 74] };
+    const bands = V.age_gender.map(b => ({ band: b.band, lo: span(b.band)[0], hi: span(b.band)[1], v: b.male_pct + b.female_pct, a: 0 }));
+    P.age.forEach(b => { const sp = SPOT[b.band]; if (!sp) return; const yrs = sp[1] - sp[0] + 1; for (let y = sp[0]; y <= sp[1]; y++) { const t = bands.find(x => y >= x.lo && y <= x.hi); if (t) t.a += b.pct / yrs; } });
+    bands.forEach(b => { b.total = Math.round(b.v / 100 * vt) + Math.round(b.a / 100 * A.spotify_plays); });
+    const tmax = Math.max(...bands.map(b => b.total));
+    $('#t-age').innerHTML = `<ul class="list tri tot"><li class="heads"><span></span><span class="pt">Total</span><span class="pv">Video</span><span class="pa">Audio</span></li>${bands.map((b, i) => `<li style="--i:${i}"><span class="n">${esc(b.band)} years</span><span class="tc"><span class="t"><span class="f nz" style="--w:${(b.total / tmax * 100).toFixed(2)}%"></span></span><span class="c">≈ ${n(b.total)}</span></span><span class="v">${pc(b.v)}</span><span class="v">≈ ${pc(b.a)}</span></li>`).join('')}</ul>`;
+    $('#t-age-card').querySelectorAll('.foot').forEach(x => x.remove());
+    $('#t-age-card').insertAdjacentHTML('beforeend', `<p class="foot">Figures marked ≈ are estimates: shares applied to ${n(vt)} views and ${n(A.spotify_plays)} Spotify plays, with Spotify's age bands spread evenly across YouTube's bands.</p>`);
+    table($('#t-age-card'), 'Age by platform', ['Band', 'Total, estimate', 'Video share of views %', 'Audio share of Spotify listeners recast onto YouTube bands %'], bands.map(b => [b.band, b.total, b.v.toFixed(2), b.a.toFixed(2)]));
 
     // countries: one row per country, three shares on one shared scale
     const m = new Map(); const put = (name, k, v) => { if (!m.has(name)) m.set(name, { name, v: null, a: null, w: null }); m.get(name)[k] = v; };
     V.geography.forEach(g => put(g.name, 'v', g.views / vt * 100));
     A.geography_pct.forEach(g => put(g.name, 'a', g.pct));
     const top = r => Math.max(r.v ?? -1, r.a ?? -1);
-    const rows = [...m.values()].sort((x, y) => top(y) - top(x) || x.name.localeCompare(y.name));
+    const rows = [...m.values()].map(r => { const vc = r.v === null ? 0 : Math.round(r.v / 100 * vt), ac = r.a === null ? 0 : Math.round(r.a / 100 * at); return { ...r, vc, ac, total: vc + ac }; })
+      .sort((x, y) => y.total - x.total || x.name.localeCompare(y.name));
+    rows.forEach((r, i) => { r.id = i; });
     const scale = Math.max(...rows.flatMap(r => [r.v, r.a]).filter(x => x !== null));
-    const cell = (k, v) => v === null ? '<span class="cell"></span>' : `<span class="cell"><span class="t"><span class="f ${k}${v > 0 ? ' nz' : ''}" style="--w:${(v / scale * 100).toFixed(2)}%"></span></span><span class="v">${pc(v)}</span></span>`;
     const half = Math.ceil(rows.length / 2);
-    const block = rs => `<ul class="list tri"><li class="heads"><span></span><span class="pv">Video</span><span class="pa">Audio</span></li>${rs.map((r, i) => `<li style="--i:${Math.min(i, 30)}"><span class="n">${esc(r.name)}</span>${cell('pv', r.v)}${cell('pa', r.a)}</li>`).join('')}</ul>`;
-    // the map: land in the Equal Earth projection, one pin per country, a filled dot for Video and a ring for Audio, both sized by share
+    const row = r => `<li id="t-c-${r.id}" data-pin="${r.id}" style="--i:${Math.min(r.id % half, 30)}"><span class="n">${esc(r.name)}</span><span class="c">${r.a === null ? '' : '≈ '}${n(r.total)}</span><span class="v">${r.v === null ? '' : pc(r.v)}</span><span class="v">${r.a === null ? '' : pc(r.a)}</span></li>`;
+    const block = rs => `<ul class="list tri num"><li class="heads"><span></span><span class="pt">Total</span><span class="pv">Video</span><span class="pa">Audio</span></li>${rs.map(row).join('')}</ul>`;
+    // the map: a globe outline and graticule as the ground, land in the Equal Earth projection, one pin per country
     let map = '';
     if (WORLD) {
       const R = v => v === null ? 0 : 2.4 + 13 * Math.sqrt(v / scale);
-      const pins = rows.filter(r => WORLD.pins[r.name]).map(r => { const [x, y] = WORLD.pins[r.name]; const t = esc(r.name) + (r.v !== null ? ' · Video ' + pc(r.v) : '') + (r.a !== null ? ' · Audio ' + pc(r.a) : '');
-        return `<g class="pin" transform="translate(${x} ${y})"><title>${t}</title>${r.v !== null ? `<circle class="pv" r="${R(r.v).toFixed(1)}"/>` : ''}${r.a !== null ? `<circle class="pa" r="${R(r.a).toFixed(1)}"/>` : ''}<circle class="core" r="1.6"/></g>`; });
-      map = `<svg class="map" viewBox="0 0 ${WORLD.w} ${WORLD.h}" role="img" aria-label="World map with a pin for every country that watches or listens"><path class="land" d="${WORLD.land}"/>${pins.join('')}</svg>
+      const pins = rows.filter(r => WORLD.pins[r.name]).map(r => { const [x, y] = WORLD.pins[r.name]; const t = esc(r.name) + ' · ' + (r.a === null ? '' : '≈ ') + n(r.total) + (r.v !== null ? ' · Video ' + pc(r.v) : '') + (r.a !== null ? ' · Audio ' + pc(r.a) : '');
+        return `<g class="pin" id="t-p-${r.id}" data-row="${r.id}" tabindex="0" role="button" aria-label="${t}" transform="translate(${x} ${y})"><title>${t}</title>${r.v !== null ? `<circle class="pv" r="${R(r.v).toFixed(1)}"/>` : ''}${r.a !== null ? `<circle class="halo" r="${R(r.a).toFixed(1)}"/><circle class="pa" r="${R(r.a).toFixed(1)}"/>` : ''}<circle class="core" r="1.6"/></g>`; });
+      map = `<svg class="map" viewBox="0 0 ${WORLD.w} ${WORLD.h}" role="img" aria-label="World map with a pin for every country that watches or listens; a pin opens its row in the list"><defs><linearGradient id="sea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFDF7" stop-opacity=".9"/><stop offset="1" stop-color="#EEF0FA" stop-opacity=".95"/></linearGradient><linearGradient id="landg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8FA3E3"/><stop offset=".5" stop-color="#A58FD1"/><stop offset="1" stop-color="#D39AB1"/></linearGradient></defs><path class="sea" d="${WORLD.frame}" fill="url(#sea)"/><path class="grat" d="${WORLD.grat}"/><path class="land" d="${WORLD.land}" fill="url(#landg)"/>${pins.join('')}</svg>
       <div class="maplegend"><span><i class="dot"></i>Video</span><span><i class="ring"></i>Audio</span></div>`;
     }
     $('#t-geo').innerHTML = `${map}<div class="twin">${block(rows.slice(0, half))}${block(rows.slice(half))}</div>`;
-    table($('#t-geo-card'), 'Countries by platform', ['Country', 'Video share of views %', 'Audio share of plays and downloads %'], rows.map(r => [r.name, r.v === null ? '' : r.v.toFixed(2), r.a === null ? '' : r.a.toFixed(2)]));
+    $('#t-geo-card').querySelectorAll('.foot').forEach(x => x.remove());
+    $('#t-geo-card').insertAdjacentHTML('beforeend', `<p class="foot">Total adds views to plays and downloads; the audio part is each share applied to ${n(at)}.</p>`);
+    const card = $('#t-geo-card');
+    if (!card.dataset.wired) {
+      card.dataset.wired = '1';
+      const go = id => { const li = document.getElementById('t-c-' + id); if (!li) return; card.querySelectorAll('li.hit').forEach(x => x.classList.remove('hit')); li.classList.add('hit'); li.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' }); clearTimeout(li._t); li._t = setTimeout(() => li.classList.remove('hit'), 2800); };
+      card.addEventListener('click', e => { const p = e.target.closest('.pin'); if (p) go(p.dataset.row); });
+      card.addEventListener('keydown', e => { const p = e.target.closest('.pin'); if (p && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); go(p.dataset.row); } });
+      const pinOf = e => { const li = e.target.closest('li[data-pin]'); return li ? document.getElementById('t-p-' + li.dataset.pin) : null; };
+      card.addEventListener('mouseover', e => { const g = pinOf(e); if (g) g.classList.add('on'); });
+      card.addEventListener('mouseout', e => { const g = pinOf(e); if (g) g.classList.remove('on'); });
+    }
+    table($('#t-geo-card'), 'Countries by platform', ['Country', 'Total', 'Video views', 'Audio plays and downloads, estimate', 'Video share of views %', 'Audio share of plays and downloads %'], rows.map(r => [r.name, r.total, r.vc, r.ac, r.v === null ? '' : r.v.toFixed(2), r.a === null ? '' : r.a.toFixed(2)]));
   }
 
   $('#brand-sub').textContent = `The Sector Debrief · updated ${dm(D.sources[0].exported_at).replace(' Sep ', ' September ')} · updated quarterly`;

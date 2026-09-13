@@ -110,7 +110,13 @@ for nm in sorted(names):
 if bad:
     print('PIN OUTSIDE ITS COUNTRY:', bad); sys.exit(1)
 print('all pins inside their own country (Singapore has no 1:110m polygon, position is its city centre)')
-out = {'source': 'Natural Earth 1:110m admin 0 countries, public domain; Equal Earth projection; Antarctica omitted', 'w': round(W), 'h': round(H, 1), 'land': land, 'pins': pins}
+# the globe outline and a 30 degree graticule, for the backdrop
+def seg(points):
+    return 'M' + 'L'.join(f'{x:.1f} {y:.1f}' for x, y in points)
+frame = seg([px(-180, lat) for lat in range(int(LAT_MAX), int(LAT_MIN) - 1, -1)] + [px(lon, LAT_MIN) for lon in range(-180, 181, 2)] + [px(180, lat) for lat in range(int(LAT_MIN), int(LAT_MAX) + 1)] + [px(lon, LAT_MAX) for lon in range(180, -181, -2)]) + 'Z'
+grat = ''.join(seg([px(lon, lat) for lat in range(int(LAT_MIN), int(LAT_MAX) + 1)]) for lon in range(-150, 151, 30))
+grat += ''.join(seg([px(lon, lat) for lon in range(-180, 181, 2)]) for lat in (-30, 0, 30, 60))
+out = {'source': 'Natural Earth 1:110m admin 0 countries, public domain; Equal Earth projection; Antarctica omitted', 'w': round(W), 'h': round(H, 1), 'land': land, 'frame': frame, 'grat': grat, 'pins': pins}
 json.dump(out, open(ROOT / 'data/world.json', 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
 print(f'land {len(land)//1000} KB, {len(paths)} rings, frame {W:.0f} x {H:.1f}, pins {len(pins)}')
 # sanity: a few known positions
