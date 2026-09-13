@@ -154,7 +154,7 @@
     const vt = V.total_views, at = A.total_plays_downloads, wt = Wb ? Wb.total_impressions : 0, all = vt + at + wt;
     const wPeriod = Wb ? `${dm(Wb.period_start)} to ${dm(Wb.period_end)}` : '';
     const kp = (cls, l, v, sub) => kpi(l, v, sub).replace('class="kpi"', 'class="kpi ' + cls + '"');
-    $('#t-summary').innerHTML = `<div class="kpi hero"><p class="l">Total listeners and viewers</p><p class="v">${n(all)}</p></div><div class="kpi hero"><p class="l">Countries reached</p><p class="v">${n(new Set(V.geography.map(g => g.name).concat(A.geography_pct.map(g => g.name), Wb ? Wb.countries.map(g => g.name) : [])).size)}</p></div>` + kp('pv', 'YouTube views', n(vt), vPeriod) + kp('pa', 'Podcast plays and downloads', n(at), aPeriod) + (Wb ? kp('pw', 'Google Search impressions', n(wt), wPeriod) : '');
+    $('#t-summary').innerHTML = `<div class="kpi hero"><p class="l">Total listeners and viewers</p><p class="v">${n(all)}</p></div><div class="kpi"><p class="l">Countries reached</p><p class="v">${n(new Set(V.geography.map(g => g.name).concat(A.geography_pct.map(g => g.name), Wb ? Wb.countries.map(g => g.name) : [])).size)}</p></div>` + kp('pv', 'YouTube views', n(vt), vPeriod) + kp('pa', 'Podcast plays and downloads', n(at), aPeriod) + (Wb ? kp('pw', 'Google Search impressions', n(wt), wPeriod) : '');
 
     // reach: a donut of the three totals, true to scale
     const parts = [{ k: 'pv', name: 'Video', v: vt, c: 'var(--cobalt)' }, { k: 'pa', name: 'Audio', v: at, c: 'var(--crimson)' }].concat(Wb ? [{ k: 'pw', name: 'Website', v: wt, c: 'var(--forest)' }] : []);
