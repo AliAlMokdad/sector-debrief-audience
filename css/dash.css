@@ -921,3 +921,54 @@ body { position: relative; }
 .duo { gap: 0; }
 .duo > div:first-child { padding-right: 24px; }
 .duo > div + div { padding-left: 24px; margin-left: 0; }
+
+
+/* final polish: a warm wash behind the paper, and quiet entrance motion */
+body {
+  background:
+    radial-gradient(1100px 620px at 100% -10%, rgba(232, 184, 44, .13), transparent 62%),
+    radial-gradient(900px 560px at -10% 100%, rgba(90, 95, 168, .09), transparent 60%),
+    radial-gradient(700px 420px at 55% 105%, rgba(200, 154, 60, .07), transparent 60%),
+    var(--paper);
+}
+.bg .stroke { opacity: .14; }
+.card, .kpi { box-shadow: 0 1px 0 rgba(26, 22, 20, .03), 0 12px 32px -22px rgba(67, 40, 74, .22); }
+.tab { transition: background-color .18s ease, color .18s ease, border-color .18s ease; }
+
+@keyframes panel-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes bar-in { from { transform: scaleX(0); } to { transform: none; } }
+@keyframes col-in { from { transform: scaleY(0); } to { transform: none; } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes rise-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.panel.active { animation: panel-in .38s cubic-bezier(.2, .7, .2, 1) both; }
+.summary .kpi { animation: rise-in .5s cubic-bezier(.2, .7, .2, 1) both; }
+.summary .kpi:nth-child(2) { animation-delay: 60ms; }
+.summary .kpi:nth-child(3) { animation-delay: 120ms; }
+.list .f { transform-origin: left center; animation: bar-in .7s cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc(var(--i, 0) * 14ms); }
+.chart .col { transform-box: fill-box; transform-origin: center bottom; animation: col-in .7s cubic-bezier(.2, .7, .2, 1) both; }
+.chart path, .chart .end-dot, .chart .end-val, .chart .val { animation: fade-in .6s ease both; animation-delay: .25s; }
+.donut circle, .donut-v { animation: fade-in .7s ease both; }
+/* a panel re-rendered after a resize keeps its content still */
+.panel.settled, .panel.settled * { animation: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .panel.active, .summary .kpi, .list .f, .chart .col, .chart path, .chart .end-dot, .chart .end-val, .chart .val, .donut circle, .donut-v { animation: none; }
+}
+@media print { .panel, .summary .kpi, .list .f, .chart .col, .chart path, .chart text, .donut circle, .donut-v { animation: none; } }
+.list.two { justify-content: center; gap: 16px; }
+.list.two li.heads { margin-bottom: 0; }
+
+
+/* the world map above the country list */
+.map { display: block; width: 100%; height: auto; max-height: 560px; margin: 4px auto 6px; overflow: visible; }
+.map .land { fill: #E9E1CF; stroke: var(--card); stroke-width: .7; stroke-linejoin: round; }
+.map .pin circle.pv { fill: var(--cobalt); fill-opacity: .78; stroke: var(--card); stroke-width: 1; }
+.map .pin circle.pa { fill: var(--crimson); fill-opacity: .18; stroke: var(--crimson); stroke-width: 1.8; }
+.map .pin circle.core { fill: var(--card); }
+.map .pin { animation: fade-in .6s ease both; animation-delay: .3s; }
+.maplegend { display: flex; justify-content: center; gap: 28px; margin: 0 0 22px; padding-bottom: 18px; border-bottom: 1px solid var(--line); color: var(--ink-mute); font: 500 13px/1.4 var(--text); }
+.maplegend i { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 8px; vertical-align: -1px; }
+.maplegend .dot { background: var(--cobalt); opacity: .85; }
+.maplegend .ring { border: 2px solid var(--crimson); background: rgba(184, 58, 42, .18); box-sizing: border-box; }
+.list.tri li { grid-template-columns: minmax(0, 1.1fr) repeat(2, minmax(0, 1fr)); }
+@media (prefers-reduced-motion: reduce) { .map .pin { animation: none; } }
+@media print { .panel, .panel *, .summary .kpi { animation: none !important; } }

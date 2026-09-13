@@ -1,6 +1,7 @@
 /* Renders the audience page from data/audience.json. Inline SVG and HTML, no libraries. */
 (async function () {
   const D = await fetch('data/audience.json', { cache: 'no-store' }).then(r => r.json());
+  const WORLD = await fetch('data/world.json', { cache: 'no-store' }).then(r => r.json()).catch(() => null);
   const fmt = new Intl.NumberFormat('en-GB');
   const n = v => fmt.format(Math.round(v));
   const pc = v => v > 0 && v < 0.1 ? '<0.1%' : (Math.round(v * 10) / 10).toFixed(1) + '%';
@@ -27,8 +28,8 @@
   function list(host, rows, opts = {}) {
     const scale = opts.scale === 'max' ? Math.max(...rows.filter(r => !r.sep).map(r => r.v), 1e-9) : 100;
     const nums = rows.some(r => r.count !== undefined);
-    host.innerHTML = `<ul class="list${opts.small ? ' small' : ''}${opts.cols ? ' cols' : ''}${opts.tight ? ' tight' : ''}${nums ? ' nums' : ''}">${rows.map(r => r.sep ? '<li class="sep" aria-hidden="true"></li>' :
-      `<li class="${r.muted ? 'muted' : ''}"><span class="n">${esc(r.label)}</span><span class="t"><span class="f${r.v > 0 ? ' nz' : ''}" style="--w:${Math.max(0, Math.min(100, r.v / scale * 100)).toFixed(2)}%"></span></span>${nums ? `<span class="c">${r.count === undefined ? '' : (r.est ? '≈ ' : '') + n(r.count)}</span>` : ''}<span class="v">${r.text}</span></li>`).join('')}</ul>`;
+    host.innerHTML = `<ul class="list${opts.small ? ' small' : ''}${opts.cols ? ' cols' : ''}${opts.tight ? ' tight' : ''}${nums ? ' nums' : ''}">${rows.map((r, i) => r.sep ? '<li class="sep" aria-hidden="true"></li>' :
+      `<li class="${r.muted ? 'muted' : ''}" style="--i:${Math.min(i, 30)}"><span class="n">${esc(r.label)}</span><span class="t"><span class="f${r.v > 0 ? ' nz' : ''}" style="--w:${Math.max(0, Math.min(100, r.v / scale * 100)).toFixed(2)}%"></span></span>${nums ? `<span class="c">${r.count === undefined ? '' : (r.est ? '≈ ' : '') + n(r.count)}</span>` : ''}<span class="v">${r.text}</span></li>`).join('')}</ul>`;
   }
 
   // daily chart: an area for the total, and optionally a second line for one component
@@ -164,20 +165,18 @@
     parts.forEach(p => { const len = p.v / all * C; el(svg, 'circle', { cx, cy, r, fill: 'none', stroke: p.c, 'stroke-width': sw, 'stroke-dasharray': `${len.toFixed(3)} ${(C - len).toFixed(3)}`, 'stroke-dashoffset': (-off).toFixed(3), transform: `rotate(-90 ${cx} ${cy})` }); off += len; });
     el(svg, 'text', { x: cx, y: cy + 10, 'text-anchor': 'middle', class: 'donut-v' }, n(all));
     host.appendChild(svg);
-    host.insertAdjacentHTML('beforeend', `<ul class="list leg">${parts.map(p => `<li><i style="background:${p.c}"></i><span class="n">${p.name}</span><span class="c">${n(p.v)}</span><span class="v">${pc(p.v / all * 100)}</span></li>`).join('')}</ul>`);
+    host.insertAdjacentHTML('beforeend', `<ul class="list leg">${parts.map((p, i) => `<li style="--i:${i}"><i style="background:${p.c}"></i><span class="n">${p.name}</span><span class="c">${n(p.v)}</span><span class="v">${pc(p.v / all * 100)}</span></li>`).join('')}</ul>`);
     table($('#t-share-card'), 'Total by platform', ['Platform', 'Count', 'Share %'], parts.map(p => [p.name, p.v, (p.v / all * 100).toFixed(2)]));
 
     // gender: video share of views beside audio share of Spotify listeners
     const male = V.age_gender.reduce((a, b) => a + b.male_pct, 0), female = V.age_gender.reduce((a, b) => a + b.female_pct, 0);
     const ag = k => (P.gender.find(g => g.label === k) || { pct: null }).pct;
     const grows = [{ label: 'Male', v: male, a: ag('Male') }, { label: 'Female', v: female, a: ag('Female') }].concat(P.gender.filter(g => !['Male', 'Female'].includes(g.label) && g.pct > 0).map(g => ({ label: g.label, v: null, a: g.pct })));
-    $('#t-gender-p').innerHTML = 'Video · YouTube reported views &nbsp;·&nbsp; Audio · Spotify listeners, all time';
     const bar = (k, v) => v === null ? '<span class="t none"></span>' : `<span class="t"><span class="f ${k}${v > 0 ? ' nz' : ''}" style="--w:${Math.min(100, v).toFixed(2)}%"></span></span>`;
-    $('#t-gender').innerHTML = `<ul class="list two"><li class="heads"><span></span><span></span><span class="pv">Video</span><span class="pa">Audio</span></li>${grows.map(g => `<li><span class="n">${esc(g.label)}</span><span class="tt">${bar('pv', g.v)}${bar('pa', g.a)}</span><span class="v pv">${g.v === null ? '' : pc(g.v)}</span><span class="v pa">${g.a === null ? '' : pc(g.a)}</span></li>`).join('')}</ul>`;
+    $('#t-gender').innerHTML = `<ul class="list two"><li class="heads"><span></span><span></span><span class="pv">Video</span><span class="pa">Audio</span></li>${grows.map((g, i) => `<li style="--i:${i}"><span class="n">${esc(g.label)}</span><span class="tt">${bar('pv', g.v)}${bar('pa', g.a)}</span><span class="v pv">${g.v === null ? '' : pc(g.v)}</span><span class="v pa">${g.a === null ? '' : pc(g.a)}</span></li>`).join('')}</ul>`;
     table($('#t-gender-card'), 'Gender by platform', ['Group', 'Video share of views %', 'Audio share of Spotify listeners %'], grows.map(g => [g.label, g.v === null ? '' : g.v.toFixed(2), g.a === null ? '' : g.a.toFixed(2)]));
 
     // age: each platform keeps its own bands
-    $('#t-age-p').innerHTML = 'Video · YouTube reported views &nbsp;·&nbsp; Audio · Spotify listeners, all time';
     $('#t-age').innerHTML = '<div class="pv"><p class="hd">Video</p><div id="t-age-v"></div></div><div class="pa"><p class="hd">Audio</p><div id="t-age-a"></div></div>';
     list($('#t-age-v'), V.age_gender.map(b => ({ label: b.band + ' years', v: b.male_pct + b.female_pct, text: pc(b.male_pct + b.female_pct) })));
     list($('#t-age-a'), P.age.filter(b => b.band !== 'Unknown').map(b => ({ label: b.band + ' years', v: b.pct, text: pc(b.pct) })));
@@ -187,18 +186,26 @@
     const m = new Map(); const put = (name, k, v) => { if (!m.has(name)) m.set(name, { name, v: null, a: null, w: null }); m.get(name)[k] = v; };
     V.geography.forEach(g => put(g.name, 'v', g.views / vt * 100));
     A.geography_pct.forEach(g => put(g.name, 'a', g.pct));
-    if (Wb) Wb.countries.forEach(g => put(g.name, 'w', g.impressions / wt * 100));
-    const top = r => Math.max(r.v ?? -1, r.a ?? -1, r.w ?? -1);
+    const top = r => Math.max(r.v ?? -1, r.a ?? -1);
     const rows = [...m.values()].sort((x, y) => top(y) - top(x) || x.name.localeCompare(y.name));
-    const scale = Math.max(...rows.flatMap(r => [r.v, r.a, r.w]).filter(x => x !== null));
+    const scale = Math.max(...rows.flatMap(r => [r.v, r.a]).filter(x => x !== null));
     const cell = (k, v) => v === null ? '<span class="cell"></span>' : `<span class="cell"><span class="t"><span class="f ${k}${v > 0 ? ' nz' : ''}" style="--w:${(v / scale * 100).toFixed(2)}%"></span></span><span class="v">${pc(v)}</span></span>`;
     const half = Math.ceil(rows.length / 2);
-    const block = rs => `<ul class="list tri"><li class="heads"><span></span><span class="pv">Video</span><span class="pa">Audio</span><span class="pw">Website</span></li>${rs.map(r => `<li><span class="n">${esc(r.name)}</span>${cell('pv', r.v)}${cell('pa', r.a)}${cell('pw', r.w)}</li>`).join('')}</ul>`;
-    $('#t-geo').innerHTML = `<div class="twin">${block(rows.slice(0, half))}${block(rows.slice(half))}</div>`;
-    table($('#t-geo-card'), 'Countries by platform', ['Country', 'Video share of views %', 'Audio share of plays and downloads %', 'Website share of impressions %'], rows.map(r => [r.name, r.v === null ? '' : r.v.toFixed(2), r.a === null ? '' : r.a.toFixed(2), r.w === null ? '' : r.w.toFixed(2)]));
+    const block = rs => `<ul class="list tri"><li class="heads"><span></span><span class="pv">Video</span><span class="pa">Audio</span></li>${rs.map((r, i) => `<li style="--i:${Math.min(i, 30)}"><span class="n">${esc(r.name)}</span>${cell('pv', r.v)}${cell('pa', r.a)}</li>`).join('')}</ul>`;
+    // the map: land in the Equal Earth projection, one pin per country, a filled dot for Video and a ring for Audio, both sized by share
+    let map = '';
+    if (WORLD) {
+      const R = v => v === null ? 0 : 2.4 + 13 * Math.sqrt(v / scale);
+      const pins = rows.filter(r => WORLD.pins[r.name]).map(r => { const [x, y] = WORLD.pins[r.name]; const t = esc(r.name) + (r.v !== null ? ' · Video ' + pc(r.v) : '') + (r.a !== null ? ' · Audio ' + pc(r.a) : '');
+        return `<g class="pin" transform="translate(${x} ${y})"><title>${t}</title>${r.v !== null ? `<circle class="pv" r="${R(r.v).toFixed(1)}"/>` : ''}${r.a !== null ? `<circle class="pa" r="${R(r.a).toFixed(1)}"/>` : ''}<circle class="core" r="1.6"/></g>`; });
+      map = `<svg class="map" viewBox="0 0 ${WORLD.w} ${WORLD.h}" role="img" aria-label="World map with a pin for every country that watches or listens"><path class="land" d="${WORLD.land}"/>${pins.join('')}</svg>
+      <div class="maplegend"><span><i class="dot"></i>Video</span><span><i class="ring"></i>Audio</span></div>`;
+    }
+    $('#t-geo').innerHTML = `${map}<div class="twin">${block(rows.slice(0, half))}${block(rows.slice(half))}</div>`;
+    table($('#t-geo-card'), 'Countries by platform', ['Country', 'Video share of views %', 'Audio share of plays and downloads %'], rows.map(r => [r.name, r.v === null ? '' : r.v.toFixed(2), r.a === null ? '' : r.a.toFixed(2)]));
   }
 
-  $('#brand-sub').textContent = `The Sector Debrief · updated ${dm(D.sources[0].exported_at).replace(' Sep ', ' September ')} · updated monthly`;
+  $('#brand-sub').textContent = `The Sector Debrief · updated ${dm(D.sources[0].exported_at).replace(' Sep ', ' September ')} · updated quarterly`;
 
   const rendered = {};
   const RENDER = { all: renderAll, video: renderVideo, audio: renderAudio, website: renderWebsite };
@@ -212,7 +219,7 @@
   document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => show(t.dataset.view)));
   $('.tabs').addEventListener('keydown', e => { if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return; const tabs = [...document.querySelectorAll('.tab:not([hidden])')]; const i = tabs.findIndex(t => t.getAttribute('aria-selected') === 'true'); const next = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length].dataset.view; show(next); document.querySelector(`.tab[data-view="${next}"]`).focus(); e.preventDefault(); });
   addEventListener('hashchange', () => show(viewOf(location.hash)));
-  let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { for (const v in rendered) { if (document.getElementById(v).classList.contains('active')) RENDER[v](); else rendered[v] = false; } }, 150); });
+  let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { for (const v in rendered) { const p = document.getElementById(v); p.classList.add('settled'); if (p.classList.contains('active')) RENDER[v](); else rendered[v] = false; } }, 150); });
   addEventListener('beforeprint', () => { document.querySelectorAll('.panel').forEach(p => p.classList.add('active')); for (const v in RENDER) { RENDER[v](); rendered[v] = true; } });
   addEventListener('afterprint', () => show(viewOf(location.hash)));
   if (!D.website) document.querySelector('.tab[data-view="website"]').hidden = true;
