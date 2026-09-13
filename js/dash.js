@@ -184,8 +184,6 @@
     bands.forEach(b => { b.total = Math.round(b.v / 100 * vt) + Math.round(b.a / 100 * A.spotify_plays); });
     const tmax = Math.max(...bands.map(b => b.total));
     $('#t-age').innerHTML = `<ul class="list tri tot"><li class="heads"><span></span><span class="pt">Total</span><span class="pv">Video</span><span class="pa">Audio</span></li>${bands.map((b, i) => `<li style="--i:${i}"><span class="n">${esc(b.band)} years</span><span class="tc"><span class="t"><span class="f nz" style="--w:${(b.total / tmax * 100).toFixed(2)}%"></span></span><span class="c">≈ ${n(b.total)}</span></span><span class="v">${pc(b.v)}</span><span class="v">≈ ${pc(b.a)}</span></li>`).join('')}</ul>`;
-    $('#t-age-card').querySelectorAll('.foot').forEach(x => x.remove());
-    $('#t-age-card').insertAdjacentHTML('beforeend', `<p class="foot">Figures marked ≈ are estimates: shares applied to ${n(vt)} views and ${n(A.spotify_plays)} Spotify plays, with Spotify's age bands spread evenly across YouTube's bands.</p>`);
     table($('#t-age-card'), 'Age by platform', ['Band', 'Total, estimate', 'Video share of views %', 'Audio share of Spotify listeners recast onto YouTube bands %'], bands.map(b => [b.band, b.total, b.v.toFixed(2), b.a.toFixed(2)]));
 
     // countries: one row per country, three shares on one shared scale
@@ -193,7 +191,7 @@
     V.geography.forEach(g => put(g.name, 'v', g.views / vt * 100));
     A.geography_pct.forEach(g => put(g.name, 'a', g.pct));
     const top = r => Math.max(r.v ?? -1, r.a ?? -1);
-    const rows = [...m.values()].map(r => { const vc = r.v === null ? 0 : Math.round(r.v / 100 * vt), ac = r.a === null ? 0 : Math.round(r.a / 100 * at); return { ...r, vc, ac, total: vc + ac }; })
+    const rows = [...m.values()].map(r => { const vc = r.v === null ? 0 : Math.round(r.v / 100 * vt), ac = r.a === null ? 0 : Math.ceil(r.a / 100 * at - 1e-9); return { ...r, vc, ac, total: vc + ac }; })
       .sort((x, y) => y.total - x.total || x.name.localeCompare(y.name));
     rows.forEach((r, i) => { r.id = i; });
     const scale = Math.max(...rows.flatMap(r => [r.v, r.a]).filter(x => x !== null));
@@ -210,8 +208,6 @@
       <div class="maplegend"><span><i class="dot"></i>Video</span><span><i class="ring"></i>Audio</span></div>`;
     }
     $('#t-geo').innerHTML = `${map}<div class="twin">${block(rows.slice(0, half))}${block(rows.slice(half))}</div>`;
-    $('#t-geo-card').querySelectorAll('.foot').forEach(x => x.remove());
-    $('#t-geo-card').insertAdjacentHTML('beforeend', `<p class="foot">Total adds views to plays and downloads; the audio part is each share applied to ${n(at)}.</p>`);
     const card = $('#t-geo-card');
     if (!card.dataset.wired) {
       card.dataset.wired = '1';
