@@ -1036,3 +1036,6 @@ body {
 .summary > .kpi.hero .l { color: #E8B82C; }
 .summary > .kpi.hero .v { color: #FFFDF7; font-size: 52px; letter-spacing: -0.03em; }
 .summary > .kpi.hero:hover, .summary > .kpi.hero:first-child:hover { border-color: transparent; }
+.summary > .kpi.hero { min-width: 250px; }
+.summary > .kpi.hero + .kpi.hero { background: linear-gradient(135deg, #4A2B52 0%, #5B3A63 55%, #74507C 100%); }
+.summary > .kpi.hero + .kpi.hero::after { background: radial-gradient(circle at 35% 35%, rgba(200, 154, 60, .26), rgba(200, 154, 60, 0) 70%); }
