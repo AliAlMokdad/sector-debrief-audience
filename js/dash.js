@@ -45,7 +45,7 @@
     const x = t => m.l + (t - t0) / (t1 - t0) * (W - m.l - m.r), y = v => H - m.b - v / ymax * (H - m.t - m.b);
     for (let i = 0; i <= 4; i++) { const v = ymax / 4 * i; el(s, 'line', { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), class: i ? 'grid' : 'base' }); el(s, 'text', { x: m.l - 8, y: y(v) + 4, 'text-anchor': 'end' }, short(v)); }
     let d = new Date(series[0].date + 'T00:00:00'); d.setDate(1); d.setMonth(d.getMonth() + 1);
-    while (d.getTime() <= t1) { el(s, 'text', { x: x(d.getTime()), y: H - 8, 'text-anchor': 'middle' }, MON[d.getMonth()] + (d.getMonth() === 0 ? ' ' + String(d.getFullYear()).slice(2) : '')); d.setMonth(d.getMonth() + 1); }
+    while (d.getTime() <= t1) { el(s, 'text', { x: x(d.getTime()), y: H - 8, 'text-anchor': 'middle' }, MON[d.getMonth()] + (d.getMonth() === 0 && W >= 480 ? ' ' + String(d.getFullYear()).slice(2) : '')); d.setMonth(d.getMonth() + 1); }
     const path = key => series.map((r, i) => (i ? 'L' : 'M') + x(T(r.date)).toFixed(1) + ',' + y(r[key] || 0).toFixed(1)).join('');
     el(s, 'path', { d: path(total) + `L${x(t1).toFixed(1)},${y(0).toFixed(1)}L${x(t0).toFixed(1)},${y(0).toFixed(1)}Z`, class: 'area' + (part ? ' b' : '') });
     el(s, 'path', { d: path(total), class: 'line' + (part ? ' b' : '') });
@@ -59,7 +59,8 @@
   // monthly columns with an optional second label line
   function columns(host, rows, opts = {}) {
     host.innerHTML = '';
-    const W = width(host), H = opts.h || 200, m = { l: 4, r: 4, t: 24, b: 38 };
+    // on a phone the columns render wider than the card and the card scrolls sideways, so every month keeps a readable label
+    const W = Math.max(width(host), matchMedia('(max-width: 640px)').matches ? 560 : 0), H = opts.h || 200, m = { l: 4, r: 4, t: 24, b: 38 };
     const s = el(document.createDocumentFragment(), 'svg', { viewBox: `0 0 ${W} ${H}`, width: W, height: H, class: 'chart', role: 'img', 'aria-label': opts.label || '' });
     const max = Math.max(1, ...rows.map(r => r.count)), slot = Math.min(168, (W - m.l - m.r) / rows.length), bw = Math.min(96, slot * .72), x0 = m.l + (W - m.l - m.r - slot * rows.length) / 2;
     const y = v => H - m.b - v / max * (H - m.t - m.b);
@@ -68,8 +69,14 @@
       const xx = x0 + (i + .5) * slot - bw / 2, note = opts.note ? opts.note(r) : '';
       el(s, 'rect', { x: xx, y: y(r.count), width: bw, height: Math.max(0, y(0) - y(r.count)), rx: 2, class: 'col' + (note ? ' part' : '') });
       el(s, 'text', { x: xx + bw / 2, y: y(r.count) - 6, 'text-anchor': 'middle', class: 'val' }, n(r.count));
-      el(s, 'text', { x: xx + bw / 2, y: H - 22, 'text-anchor': 'middle' }, MON[+r.month.slice(5) - 1] + (slot < 90 ? ' ' + r.month.slice(2, 4) : ' ' + r.month.slice(0, 4)));
-      if (note) el(s, 'text', { x: xx + bw / 2, y: H - 7, 'text-anchor': 'middle', class: 'note' }, note);
+      if (slot < 44) {
+        el(s, 'text', { x: xx + bw / 2, y: H - 25, 'text-anchor': 'middle' }, MON[+r.month.slice(5) - 1]);
+        el(s, 'text', { x: xx + bw / 2, y: H - 13, 'text-anchor': 'middle', class: 'yy' }, r.month.slice(2, 4));
+        if (note) el(s, 'text', { x: i === 0 ? Math.max(0, xx - 6) : i === rows.length - 1 ? Math.min(W, xx + bw + 6) : xx + bw / 2, y: H - 2, 'text-anchor': i === 0 ? 'start' : i === rows.length - 1 ? 'end' : 'middle', class: 'note' }, note);
+      } else {
+        el(s, 'text', { x: xx + bw / 2, y: H - 22, 'text-anchor': 'middle' }, MON[+r.month.slice(5) - 1] + (slot < 90 ? ' ' + r.month.slice(2, 4) : ' ' + r.month.slice(0, 4)));
+        if (note) el(s, 'text', { x: xx + bw / 2, y: H - 7, 'text-anchor': 'middle', class: 'note' }, note);
+      }
     });
     host.appendChild(s);
   }
@@ -207,10 +214,12 @@
       const R = v => v === null ? 0 : 2.4 + 13 * Math.sqrt(v / scale);
       const pins = rows.filter(r => WORLD.pins[r.name]).map(r => { const [x, y] = WORLD.pins[r.name]; const t = esc(r.name) + ' · ' + (r.a === null && r.v !== null ? '' : '≈ ') + n(r.total) + (r.v !== null ? ' · Video ' + pc(r.v) : '') + (r.a !== null ? ' · Audio ' + pc(r.a) : '');
         return `<g class="pin" id="t-p-${r.id}" data-row="${r.id}" tabindex="0" role="button" aria-label="${t}" transform="translate(${x} ${y})"><title>${t}</title>${r.v !== null ? `<circle class="pv" r="${R(r.v).toFixed(1)}"/>` : ''}${r.a !== null ? `<circle class="halo" r="${R(r.a).toFixed(1)}"/><circle class="pa" r="${R(r.a).toFixed(1)}"/>` : ''}<circle class="core" r="1.6"/></g>`; });
-      map = `<svg class="map" viewBox="0 0 ${WORLD.w} ${WORLD.h}" role="img" aria-label="World map with a pin for every country that watches or listens; a pin opens its row in the list"><defs><linearGradient id="sea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFDF7" stop-opacity=".9"/><stop offset="1" stop-color="#EEF0FA" stop-opacity=".95"/></linearGradient><linearGradient id="landg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8FA3E3"/><stop offset=".5" stop-color="#A58FD1"/><stop offset="1" stop-color="#D39AB1"/></linearGradient></defs><path class="sea" d="${WORLD.frame}" fill="url(#sea)"/><path class="grat" d="${WORLD.grat}"/><path class="land" d="${WORLD.land}" fill="url(#landg)"/>${pins.join('')}</svg>
+      map = `<div class="mapwrap"><svg class="map" viewBox="0 0 ${WORLD.w} ${WORLD.h}" role="img" aria-label="World map with a pin for every country that watches or listens; a pin opens its row in the list"><defs><linearGradient id="sea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFDF7" stop-opacity=".9"/><stop offset="1" stop-color="#EEF0FA" stop-opacity=".95"/></linearGradient><linearGradient id="landg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8FA3E3"/><stop offset=".5" stop-color="#A58FD1"/><stop offset="1" stop-color="#D39AB1"/></linearGradient></defs><path class="sea" d="${WORLD.frame}" fill="url(#sea)"/><path class="grat" d="${WORLD.grat}"/><path class="land" d="${WORLD.land}" fill="url(#landg)"/>${pins.join('')}</svg></div>
       <div class="maplegend"><span><i class="dot"></i>Video</span><span><i class="ring"></i>Audio</span></div>`;
     }
     $('#t-geo').innerHTML = `${map}<div class="twin">${block(rows.slice(0, half))}${block(rows.slice(half))}</div>`;
+    // on a phone the strip opens on the Americas to India span, the two leading countries both in view
+    const mw = $('#t-geo .mapwrap'); if (mw && matchMedia('(max-width: 640px)').matches) mw.scrollLeft = Math.round(mw.scrollWidth * 0.2);
     const card = $('#t-geo-card');
     if (!card.dataset.wired) {
       card.dataset.wired = '1';
