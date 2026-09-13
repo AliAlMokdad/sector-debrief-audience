@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/dash.css?v=2026-09-13e">
+<link rel="stylesheet" href="css/dash.css?v=2026-09-13g">
 <!--
 ANTI_SLOP_BRIEF
 bold move: none by design. The model is YouTube Studio and Spotify for Creators: plain cards, complete lists with percentages, one colour per platform. Restraint is the decision.
@@ -54,12 +54,10 @@ verifiable: every number comes from data/audience.json, built by build/build_dat
   <div class="wrap">
     <div class="summary" id="v-summary"></div>
     <div class="grid">
-      <div class="card c5" id="v-geo-card"><h2>Locations</h2><div id="v-geo"></div></div>
-      <div class="c4 col">
-        <div class="card" id="v-age-card"><h2>Age and gender</h2><div id="v-age"></div></div>
-        <div class="card" id="v-dev-card"><h2>Device type</h2><div id="v-dev"></div></div>
-      </div>
-      <div class="card c3" id="v-cc-card"><h2>Subtitles</h2><div id="v-cc"></div></div>
+      <div class="card c12" id="v-geo-card"><h2>Locations</h2><div id="v-geo"></div></div>
+      <div class="card c4" id="v-age-card"><h2>Age and gender</h2><div id="v-age"></div></div>
+      <div class="card c4" id="v-dev-card"><h2>Device type</h2><div id="v-dev"></div></div>
+      <div class="card c4" id="v-cc-card"><h2>Subtitles</h2><div id="v-cc"></div></div>
       <div class="card c12" id="v-daily-card"><h2>Views</h2><p class="p" id="v-daily-p"></p><div id="v-daily"></div><p class="foot" id="v-daily-foot"></p></div>
       <div class="card c7" id="v-month-card"><h2>Views by month</h2><p class="p" id="v-month-p"></p><div id="v-month"></div></div>
       <div class="card c5" id="v-sub-card"><h2>Subscribers</h2><p class="p" id="v-sub-p"></p><div id="v-sub"></div></div>
@@ -71,12 +69,10 @@ verifiable: every number comes from data/audience.json, built by build/build_dat
   <div class="wrap">
     <div class="summary" id="a-summary"></div>
     <div class="grid">
-      <div class="card c5" id="a-geo-card"><h2>Locations</h2><div id="a-geo"></div></div>
+      <div class="card c12" id="a-geo-card"><h2>Locations</h2><div id="a-geo"></div></div>
       <div class="card c4" id="a-age-card"><h2>Age and gender</h2><p class="p" id="a-age-p"></p><div id="a-age"></div></div>
-      <div class="c3 col">
-        <div class="card" id="a-apps-card"><h2>Listening apps</h2><p class="p" id="a-apps-p"></p><div id="a-apps"></div></div>
-        <div class="card" id="a-dev-card" hidden><h2>Device type</h2><p class="p" id="a-dev-p"></p><div id="a-dev"></div></div>
-      </div>
+      <div class="card c4" id="a-apps-card"><h2>Listening apps</h2><p class="p" id="a-apps-p"></p><div id="a-apps"></div></div>
+      <div class="card c4" id="a-dev-card" hidden><h2>Device type</h2><p class="p" id="a-dev-p"></p><div id="a-dev"></div></div>
       <div class="card c12" id="a-daily-card"><h2>Plays and downloads</h2><p class="p" id="a-daily-p"></p><div id="a-daily"></div><div class="legend" id="a-daily-legend"></div></div>
       <div class="card c12" id="a-month-card"><h2>By month</h2><p class="p" id="a-month-p"></p><div id="a-month"></div></div>
     </div>
@@ -86,17 +82,15 @@ verifiable: every number comes from data/audience.json, built by build/build_dat
   <div class="wrap">
     <div class="summary" id="w-summary"></div>
     <div class="grid">
-      <div class="card c5" id="w-geo-card"><h2>Countries</h2><div id="w-geo"></div></div>
-      <div class="c7 col">
-        <div class="card" id="w-dev-card"><h2>Devices</h2><div id="w-dev"></div></div>
-        <div class="card" id="w-month-card"><h2>Impressions by month</h2><p class="p" id="w-month-p"></p><div id="w-month"></div></div>
-      </div>
+      <div class="card c12" id="w-geo-card"><h2>Countries</h2><div id="w-geo"></div></div>
+      <div class="card c4" id="w-dev-card"><h2>Devices</h2><div id="w-dev"></div></div>
+      <div class="card c8" id="w-month-card"><h2>Impressions by month</h2><p class="p" id="w-month-p"></p><div id="w-month"></div></div>
     </div>
   </div>
 </section>
 </main>
 
 
-<script src="js/dash.js?v=2026-09-13e"></script>
+<script src="js/dash.js?v=2026-09-13g"></script>
 </body>
 </html>

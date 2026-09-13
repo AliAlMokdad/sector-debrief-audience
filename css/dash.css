@@ -780,3 +780,19 @@ body { position: relative; }
 .kpi .l { font-weight: 400; }
 .kpi .v { font-weight: 400; }
 .brand p { font-weight: 300; }
+
+
+/* count column beside the share */
+.list.nums li { grid-template-columns: minmax(0,1fr) minmax(80px,34%) 84px 60px; }
+.list.nums.cols li { grid-template-columns: minmax(0,1fr) minmax(36px,20%) 70px 52px; gap: 10px; }
+.list.nums.tight li { grid-template-columns: minmax(0,1fr) minmax(50px,24%) 70px 56px; }
+.list .c { font: 500 14px/1 var(--text); color: var(--ink); text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.list.nums .v { color: var(--ink-mute); font-weight: 400; }
+.list .muted .c { color: var(--ink-faint); }
+
+
+/* three-column country lists across the full width; names never break inside a word */
+.list.cols { columns: 3; column-gap: 40px; column-rule: 1px solid var(--line); }
+.list.cols li, .list.nums.cols li { grid-template-columns: minmax(0,1fr) minmax(60px,26%) 72px 56px; gap: 12px; }
+.list .n { overflow-wrap: normal; word-break: normal; hyphens: manual; }
+@media (max-width: 1180px) { .list.cols { columns: 2; } }

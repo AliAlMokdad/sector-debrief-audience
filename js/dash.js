@@ -26,8 +26,9 @@
   // list of label, bar, value. Bars start at a common left edge. scale: 100 for shares, or the largest value for rankings.
   function list(host, rows, opts = {}) {
     const scale = opts.scale === 'max' ? Math.max(...rows.filter(r => !r.sep).map(r => r.v), 1e-9) : 100;
-    host.innerHTML = `<ul class="list${opts.small ? ' small' : ''}${opts.cols ? ' cols' : ''}${opts.tight ? ' tight' : ''}">${rows.map(r => r.sep ? '<li class="sep" aria-hidden="true"></li>' :
-      `<li class="${r.muted ? 'muted' : ''}"><span class="n">${esc(r.label)}</span><span class="t"><span class="f${r.v > 0 ? ' nz' : ''}" style="--w:${Math.max(0, Math.min(100, r.v / scale * 100)).toFixed(2)}%"></span></span><span class="v">${r.text}</span></li>`).join('')}</ul>`;
+    const nums = rows.some(r => r.count !== undefined);
+    host.innerHTML = `<ul class="list${opts.small ? ' small' : ''}${opts.cols ? ' cols' : ''}${opts.tight ? ' tight' : ''}${nums ? ' nums' : ''}">${rows.map(r => r.sep ? '<li class="sep" aria-hidden="true"></li>' :
+      `<li class="${r.muted ? 'muted' : ''}"><span class="n">${esc(r.label)}</span><span class="t"><span class="f${r.v > 0 ? ' nz' : ''}" style="--w:${Math.max(0, Math.min(100, r.v / scale * 100)).toFixed(2)}%"></span></span>${nums ? `<span class="c">${r.count === undefined ? '' : (r.est ? '≈ ' : '') + n(r.count)}</span>` : ''}<span class="v">${r.text}</span></li>`).join('')}</ul>`;
   }
 
   // daily chart: an area for the total, and optionally a second line for one component
@@ -81,15 +82,18 @@
     const tot = V.total_views;
     $('#v-summary').innerHTML = kpi('Views', n(tot), vPeriod) + kpi('Subscribers', n(V.subscribers), `on ${dm(V.subscribers_as_of)}`);
 
-    list($('#v-geo'), V.geography.map(g => ({ label: g.name, v: g.views / tot * 100, text: pc(g.views / tot * 100) })), { small: true, cols: true, scale: 'max' });
+    list($('#v-geo'), V.geography.map(g => ({ label: g.name, v: g.views / tot * 100, count: g.views, text: pc(g.views / tot * 100) })), { small: true, cols: true, scale: 'max' });
     table($('#v-geo-card'), 'Views by country', ['Country', 'Views', 'Share %'], V.geography.map(g => [g.name, g.views, (g.views / tot * 100).toFixed(2)]));
 
     const male = V.age_gender.reduce((a, b) => a + b.male_pct, 0), female = V.age_gender.reduce((a, b) => a + b.female_pct, 0);
-    list($('#v-age'), [{ label: 'Male', v: male, text: pc(male) }, { label: 'Female', v: female, text: pc(female) }, { sep: true }]
-      .concat(V.age_gender.map(b => ({ label: b.band + ' years', v: b.male_pct + b.female_pct, text: pc(b.male_pct + b.female_pct) }))));
+    const est = p => Math.round(p / 100 * tot / 100) * 100;
+    list($('#v-age'), [{ label: 'Male', v: male, count: est(male), est: true, text: pc(male) }, { label: 'Female', v: female, count: est(female), est: true, text: pc(female) }, { sep: true }]
+      .concat(V.age_gender.map(b => ({ label: b.band + ' years', v: b.male_pct + b.female_pct, count: est(b.male_pct + b.female_pct), est: true, text: pc(b.male_pct + b.female_pct) }))));
+    $('#v-age-card').querySelectorAll('.foot').forEach(x => x.remove());
+    $('#v-age-card').insertAdjacentHTML('beforeend', `<p class="foot">Counts marked ≈ are the share applied to all ${n(tot)} views, rounded to the nearest hundred.</p>`);
     table($('#v-age-card'), 'Share of views by gender and age', ['Group', 'Share %'], [['Male', male.toFixed(2)], ['Female', female.toFixed(2)]].concat(V.age_gender.map(b => [b.band, (b.male_pct + b.female_pct).toFixed(2)])));
 
-    list($('#v-dev'), V.devices.map(d => ({ label: d.name, v: d.views / tot * 100, text: pc(d.views / tot * 100) })).concat([{ sep: true }, { label: 'Not reported', v: V.devices_other / tot * 100, text: pc(V.devices_other / tot * 100), muted: true }]));
+    list($('#v-dev'), V.devices.map(d => ({ label: d.name, v: d.views / tot * 100, count: d.views, text: pc(d.views / tot * 100) })).concat([{ sep: true }, { label: 'Not reported', v: V.devices_other / tot * 100, count: V.devices_other, text: pc(V.devices_other / tot * 100), muted: true }]));
     table($('#v-dev-card'), 'Views by device type', ['Device', 'Views'], V.devices.map(d => [d.name, d.views]).concat([['Not reported', V.devices_other]]));
 
     $('#v-daily-p').innerHTML = `Views per day · <b>${vPeriod}</b>`;
@@ -97,7 +101,7 @@
     $('#v-daily-foot').innerHTML = `YouTube's totals table reports <b>${n(tot)}</b> views; its daily table sums to ${n(V.daily_series_sum)}.`;
     table($('#v-daily-card'), 'Views per day', ['Date', 'Views'], V.daily.map(r => [r.date, r.count]));
 
-    list($('#v-cc'), V.captions.map(c => ({ label: c.name, v: c.views / tot * 100, text: pc(c.views / tot * 100) })).concat([{ sep: true }, { label: 'Not reported', v: V.captions_other / tot * 100, text: pc(V.captions_other / tot * 100), muted: true }]), { small: true, tight: true });
+    list($('#v-cc'), V.captions.map(c => ({ label: c.name, v: c.views / tot * 100, count: c.views, text: pc(c.views / tot * 100) })).concat([{ sep: true }, { label: 'Not reported', v: V.captions_other / tot * 100, count: V.captions_other, text: pc(V.captions_other / tot * 100), muted: true }]), { small: true, tight: true });
     table($('#v-cc-card'), 'Views by subtitle language', ['Captions', 'Views'], V.captions.map(c => [c.name, c.views]).concat([['Not reported', V.captions_other]]));
 
     $('#v-month-p').innerHTML = `Views per month`;
@@ -113,7 +117,9 @@
     const tot = A.total_plays_downloads, P = A.audience_page;
     $('#a-summary').innerHTML = kpi('Plays and downloads', n(tot), aPeriod) + kpi('On Spotify', n(A.spotify_plays), pc(A.spotify_plays / tot * 100) + ' of the total') + kpi('Downloads in other apps', n(A.other_downloads), pc(A.other_downloads / tot * 100) + ' of the total, via the RSS feed');
 
-    list($('#a-geo'), A.geography_pct.map(g => ({ label: g.name, v: g.pct, text: pc(g.pct) })), { small: true, cols: true, scale: 'max' });
+    list($('#a-geo'), A.geography_pct.map(g => ({ label: g.name, v: g.pct, count: Math.round(g.pct / 100 * tot), est: true, text: pc(g.pct) })), { small: true, cols: true, scale: 'max' });
+    $('#a-geo-card').querySelectorAll('.foot').forEach(x => x.remove());
+    $('#a-geo-card').insertAdjacentHTML('beforeend', `<p class="foot">Counts marked ≈ are the share applied to all ${n(tot)} plays and downloads.</p>`);
     table($('#a-geo-card'), 'Audio by country', ['Country', 'Share %'], A.geography_pct.map(g => [g.name, g.pct.toFixed(2)]));
 
     $('#a-age-p').innerHTML = `Spotify listeners, all time · Spotify audience page`;
@@ -140,9 +146,9 @@
     const Wb = D.website; if (!Wb) return;
     const tot = Wb.total_impressions, per = `${dm(Wb.period_start)} to ${dm(Wb.period_end)}`;
     $('#w-summary').innerHTML = kpi('Impressions in Google Search', n(tot), `${per} · the export's ${Wb.window.toLowerCase()} window`);
-    list($('#w-geo'), Wb.countries.map(g => ({ label: g.name, v: g.impressions / tot * 100, text: pc(g.impressions / tot * 100) })), { small: true, cols: true, scale: 'max' });
+    list($('#w-geo'), Wb.countries.map(g => ({ label: g.name, v: g.impressions / tot * 100, count: g.impressions, text: pc(g.impressions / tot * 100) })), { small: true, cols: true, scale: 'max' });
     table($('#w-geo-card'), 'Impressions by country', ['Country', 'Impressions', 'Share %'], Wb.countries.map(g => [g.name, g.impressions, (g.impressions / tot * 100).toFixed(2)]));
-    list($('#w-dev'), Wb.devices.map(d => ({ label: d.name, v: d.impressions / tot * 100, text: pc(d.impressions / tot * 100) })));
+    list($('#w-dev'), Wb.devices.map(d => ({ label: d.name, v: d.impressions / tot * 100, count: d.impressions, text: pc(d.impressions / tot * 100) })));
     table($('#w-dev-card'), 'Impressions by device', ['Device', 'Impressions'], Wb.devices.map(d => [d.name, d.impressions]));
     $('#w-month-p').innerHTML = `Impressions per month`;
     columns($('#w-month'), Wb.monthly, { label: 'Impressions per month', h: 210, note: r => monthNote(r, Wb.period_start, Wb.period_end) });
