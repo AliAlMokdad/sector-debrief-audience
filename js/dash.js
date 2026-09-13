@@ -10,7 +10,7 @@
   const dm = iso => { const d = new Date(iso + 'T00:00:00'); return `${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}`; };
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
   const $ = sel => document.querySelector(sel);
-  const EMBEDDED = window.parent !== window;
+  const EMBEDDED = window.parent !== window && !new URLSearchParams(location.search).has('standalone');
   const NS = 'http://www.w3.org/2000/svg';
   const el = (parent, tag, attrs = {}, text) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text !== undefined) e.textContent = text; parent.appendChild(e); return e; };
   const niceMax = v => { const p = Math.pow(10, Math.floor(Math.log10(Math.max(1, v)))); const m = v / p; return ([1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10].find(s => m <= s) || 10) * p; };
@@ -25,12 +25,26 @@
     else card.insertAdjacentHTML('beforeend', html);
   }
 
+  const PHONE = () => matchMedia('(max-width: 640px)').matches;
+  // fold a long list on a phone: the first rows stay, the tail opens on a chevron
+  function fold(container, keep) {
+    if (!PHONE() || !container) return;
+    const rows = [...container.querySelectorAll('li')].filter(li => !li.classList.contains('heads') && !li.classList.contains('sep'));
+    if (rows.length <= keep + 3) return;
+    rows.slice(keep).forEach(li => li.classList.add('tail'));
+    container.classList.add('trunc');
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'more'; b.setAttribute('aria-expanded', 'false'); b.setAttribute('aria-label', 'Show all rows');
+    b.innerHTML = `<span class="cnt">+${rows.length - keep}</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    b.addEventListener('click', () => { const open = container.classList.toggle('open'); b.setAttribute('aria-expanded', String(open)); if (!open) container.scrollIntoView({ block: 'start', behavior: 'smooth' }); });
+    container.insertAdjacentElement('afterend', b);
+  }
   // list of label, bar, value. Bars start at a common left edge. scale: 100 for shares, or the largest value for rankings.
   function list(host, rows, opts = {}) {
     const scale = opts.scale === 'max' ? Math.max(...rows.filter(r => !r.sep).map(r => r.v), 1e-9) : 100;
     const nums = rows.some(r => r.count !== undefined);
-    host.innerHTML = `<ul class="list${opts.small ? ' small' : ''}${opts.cols ? ' cols' : ''}${opts.tight ? ' tight' : ''}${nums ? ' nums' : ''}">${rows.map((r, i) => r.sep ? '<li class="sep" aria-hidden="true"></li>' :
-      `<li class="${r.muted ? 'muted' : ''}" style="--i:${Math.min(i, 30)}"><span class="n">${esc(r.label)}</span><span class="t"><span class="f${r.v > 0 ? ' nz' : ''}" style="--w:${Math.max(0, Math.min(100, r.v / scale * 100)).toFixed(2)}%"></span></span>${nums ? `<span class="c">${r.count === undefined ? '' : (r.est ? '≈ ' : '') + n(r.count)}</span>` : ''}<span class="v">${r.text}</span></li>`).join('')}</ul>`;
+    host.innerHTML = `<ul class="list${opts.small ? ' small' : ''}${opts.cols ? ' cols' : ''}${opts.tight ? ' tight' : ''}${nums ? ' nums' : ''}${opts.rank ? ' ranked' : ''}">${rows.map((r, i) => r.sep ? '<li class="sep" aria-hidden="true"></li>' :
+      `<li class="${r.muted ? 'muted' : ''}" style="--i:${Math.min(i, 30)}">${opts.rank && !r.muted ? `<span class="rk">${i + 1}</span>` : ''}<span class="n">${esc(r.label)}</span><span class="t"><span class="f${r.v > 0 ? ' nz' : ''}" style="--w:${Math.max(0, Math.min(100, r.v / scale * 100)).toFixed(2)}%"></span></span>${nums ? `<span class="c">${r.count === undefined ? '' : (r.est ? '≈ ' : '') + n(r.count)}</span>` : ''}<span class="v">${r.text}</span></li>`).join('')}</ul>`;
   }
 
   // daily chart: an area for the total, and optionally a second line for one component
@@ -91,7 +105,8 @@
     const tot = V.total_views;
     $('#v-summary').innerHTML = kpi('Views', n(tot), vPeriod) + kpi('Subscribers', n(V.subscribers), `on ${dm(V.subscribers_as_of)}`);
 
-    list($('#v-geo'), V.geography.map(g => ({ label: g.name, v: g.views / tot * 100, count: g.views, text: pc(g.views / tot * 100) })), { small: true, cols: true, scale: 'max' });
+    list($('#v-geo'), V.geography.map(g => ({ label: g.name, v: g.views / tot * 100, count: g.views, text: pc(g.views / tot * 100) })), { small: true, cols: true, scale: 'max', rank: true });
+    fold($('#v-geo .list'), 10);
     table($('#v-geo-card'), 'Views by country', ['Country', 'Views', 'Share %'], V.geography.map(g => [g.name, g.views, (g.views / tot * 100).toFixed(2)]));
 
     const male = V.age_gender.reduce((a, b) => a + b.male_pct, 0), female = V.age_gender.reduce((a, b) => a + b.female_pct, 0);
@@ -111,6 +126,7 @@
     table($('#v-daily-card'), 'Views per day', ['Date', 'Views'], V.daily.map(r => [r.date, r.count]));
 
     list($('#v-cc'), V.captions.map(c => ({ label: c.name, v: c.views / tot * 100, count: c.views, text: pc(c.views / tot * 100) })).concat([{ sep: true }, { label: 'Not reported', v: V.captions_other / tot * 100, count: V.captions_other, text: pc(V.captions_other / tot * 100), muted: true }]), { small: true, tight: true });
+    fold($('#v-cc .list'), 8);
     table($('#v-cc-card'), 'Views by subtitle language', ['Captions', 'Views'], V.captions.map(c => [c.name, c.views]).concat([['Not reported', V.captions_other]]));
 
     columns($('#v-month'), V.monthly, { label: 'Views per month', h: 269, note: r => monthNote(r, V.period_start, V.period_end) });
@@ -125,7 +141,8 @@
     const tot = A.total_plays_downloads, P = A.audience_page;
     $('#a-summary').innerHTML = kpi('Plays and downloads', n(tot), aPeriod) + kpi('On Spotify', n(A.spotify_plays), pc(A.spotify_plays / tot * 100) + ' of the total') + kpi('Downloads in other apps', n(A.other_downloads), pc(A.other_downloads / tot * 100) + ' of the total, via the RSS feed');
 
-    list($('#a-geo'), A.geography_pct.map(g => ({ label: g.name, v: g.pct, text: pc(g.pct) })), { small: true, cols: true, scale: 'max' });
+    list($('#a-geo'), A.geography_pct.map(g => ({ label: g.name, v: g.pct, text: pc(g.pct) })), { small: true, cols: true, scale: 'max', rank: true });
+    fold($('#a-geo .list'), 10);
     table($('#a-geo-card'), 'Audio by country', ['Country', 'Share %'], A.geography_pct.map(g => [g.name, g.pct.toFixed(2)]));
 
     $('#a-age-p').innerHTML = `Spotify listeners, all time · Spotify audience page`;
@@ -149,7 +166,8 @@
     const Wb = D.website; if (!Wb) return;
     const tot = Wb.total_impressions, per = `${dm(Wb.period_start)} to ${dm(Wb.period_end)}`;
     $('#w-summary').innerHTML = kpi('Impressions in Google Search', n(tot), `${per} · the export's ${Wb.window.toLowerCase()} window`);
-    list($('#w-geo'), Wb.countries.map(g => ({ label: g.name, v: g.impressions / tot * 100, text: pc(g.impressions / tot * 100) })), { small: true, cols: true, scale: 'max' });
+    list($('#w-geo'), Wb.countries.map(g => ({ label: g.name, v: g.impressions / tot * 100, text: pc(g.impressions / tot * 100) })), { small: true, cols: true, scale: 'max', rank: true });
+    fold($('#w-geo .list'), 10);
     table($('#w-geo-card'), 'Impressions by country', ['Country', 'Impressions', 'Share %'], Wb.countries.map(g => [g.name, g.impressions, (g.impressions / tot * 100).toFixed(2)]));
     list($('#w-dev'), Wb.devices.map(d => ({ label: d.name, v: d.impressions / tot * 100, text: pc(d.impressions / tot * 100) })));
     table($('#w-dev-card'), 'Impressions by device', ['Device', 'Impressions'], Wb.devices.map(d => [d.name, d.impressions]));
@@ -206,7 +224,7 @@
     rows.forEach((r, i) => { r.id = i; });
     const scale = Math.max(...rows.flatMap(r => [r.v, r.a]).filter(x => x !== null));
     const half = Math.ceil(rows.length / 2);
-    const row = r => `<li id="t-c-${r.id}" data-pin="${r.id}" style="--i:${Math.min(r.id % half, 30)}"><span class="n">${esc(r.name)}</span><span class="c">${r.a === null && r.v !== null ? '' : '≈ '}${n(r.total)}</span><span class="v">${r.v === null ? '' : pc(r.v)}</span><span class="v">${r.a === null ? '' : pc(r.a)}</span></li>`;
+    const row = r => `<li id="t-c-${r.id}" data-pin="${r.id}" style="--i:${Math.min(r.id % half, 30)}"><span class="rk">${r.id + 1}</span><span class="n">${esc(r.name)}</span><span class="c">${r.a === null && r.v !== null ? '' : '≈ '}${n(r.total)}</span><span class="v pv">${r.v === null ? '' : pc(r.v)}</span><span class="v pa">${r.a === null ? '' : pc(r.a)}</span></li>`;
     const block = rs => `<ul class="list tri num"><li class="heads"><span></span><span class="pt">Total</span><span class="pv">Video</span><span class="pa">Audio</span></li>${rs.map(row).join('')}</ul>`;
     // the map: a globe outline and graticule as the ground, land in the Equal Earth projection, one pin per country
     let map = '';
@@ -219,6 +237,7 @@
     }
     $('#t-geo').innerHTML = `${map}<div class="twin">${block(rows.slice(0, half))}${block(rows.slice(half))}</div>`;
     // on a phone the strip opens on the Americas to India span, the two leading countries both in view
+    fold($('#t-geo .twin'), 10);
     const mw = $('#t-geo .mapwrap'); if (mw && matchMedia('(max-width: 640px)').matches) mw.scrollLeft = Math.round(mw.scrollWidth * 0.2);
     const card = $('#t-geo-card');
     if (!card.dataset.wired) {

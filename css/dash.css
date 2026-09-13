@@ -1153,3 +1153,59 @@ html.embedded, html.embedded body { overflow: hidden; }
   .summary > .kpi.hero .v { font-size: 40px; }
   .kpi .v { font-size: 28px; }
 }
+
+
+/* ═══════ PHONE LISTS: ranked, two-line rows, the tail folded ═══════ */
+.rk, .more { display: none; }
+@media (max-width: 640px) {
+  .trunc .tail { display: none !important; }
+  .trunc.open .tail { display: grid !important; }
+  .more { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 48px; margin: 6px 0 0; padding: 0 16px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); color: var(--plum-deep); font: 600 14px/1 var(--text); cursor: pointer; }
+  .more .cnt { font-variant-numeric: tabular-nums; }
+  .more svg { width: 18px; height: 18px; transition: transform .2s ease; }
+  .trunc.open + .more svg { transform: rotate(180deg); }
+  .trunc.open + .more .cnt { display: none; }
+  .more:focus-visible { outline: 2px solid var(--plum); outline-offset: 2px; }
+  .rk { display: block; font: 600 12px/1 var(--text); color: var(--ink-faint); font-variant-numeric: tabular-nums; text-align: right; padding-top: 3px; }
+  /* ranked geography rows: rank | name | numbers, with the bar as a hairline under the row */
+  .list.ranked li:not(.sep) { grid-template-columns: 24px minmax(0, 1fr) auto auto; grid-template-areas: "rk n c v" "rk t t t"; gap: 2px 10px; align-items: baseline; min-height: 0; padding: 10px 0 12px; border-bottom: 1px solid var(--line); border-radius: 0; }
+  .list.ranked li:not(.sep) .rk { grid-area: rk; align-self: start; }
+  .list.ranked li:not(.sep) .n { grid-area: n; font-size: 16px; line-height: 22px; color: var(--ink); }
+  .list.ranked li:not(.sep) .c { grid-area: c; font-size: 16px; line-height: 22px; font-weight: 600; color: var(--ink); }
+  .list.ranked li:not(.sep) .v { grid-area: v; font-size: 14px; line-height: 22px; color: var(--ink-mute); font-weight: 400; min-width: 52px; }
+  .list.ranked:not(.nums) li:not(.sep) { grid-template-columns: 24px minmax(0, 1fr) auto; grid-template-areas: "rk n v" "rk t t"; }
+  .list.ranked:not(.nums) li:not(.sep) .v { font-size: 16px; font-weight: 600; color: var(--ink); }
+  .list.ranked li:not(.sep) .t { grid-area: t; height: 3px; margin-top: 6px; background: var(--track); border-radius: 2px; }
+  .list.ranked li:not(.sep) .t.none { background: transparent; }
+  .list.ranked li.muted .rk { visibility: hidden; }
+  .list.ranked li.muted .n, .list.ranked li.muted .c, .list.ranked li.muted .v { color: var(--ink-faint); }
+  .list.ranked li.sep { display: none; }
+  .list.ranked li:last-child { border-bottom: 0; }
+  /* the All countries: rank | name | total, then the two shares with their platform dots */
+  .list.tri.num li:not(.heads) { grid-template-columns: 24px minmax(0, 1fr) minmax(0, 1fr) auto; grid-template-areas: "rk n n c" "rk pv pa pa"; gap: 2px 10px; align-items: baseline; padding: 10px 0 12px; min-height: 0; border-bottom: 1px solid var(--line); border-radius: 0; }
+  .list.tri.num li:not(.heads) .rk { grid-area: rk; align-self: start; }
+  .list.tri.num li:not(.heads) .n { grid-area: n; font-size: 16px; line-height: 22px; color: var(--ink); }
+  .list.tri.num li:not(.heads) .c { grid-area: c; font-size: 16px; line-height: 22px; font-weight: 600; text-align: right; }
+  .list.tri.num li:not(.heads) .v { font-size: 13.5px; line-height: 18px; color: var(--ink-mute); text-align: left; }
+  .list.tri.num li:not(.heads) .v.pv { grid-area: pv; }
+  .list.tri.num li:not(.heads) .v.pa { grid-area: pa; }
+  .list.tri.num li:not(.heads) .v:not(:empty)::before { content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+  .list.tri.num li:not(.heads) .v.pv:not(:empty)::before { background: var(--cobalt); }
+  .list.tri.num li:not(.heads) .v.pa:not(:empty)::before { background: var(--crimson); }
+  .list.tri.num li.heads { grid-template-columns: auto auto; justify-content: end; gap: 16px; position: static; padding: 0 0 8px; }
+  .list.tri.num li.heads span:nth-child(1), .list.tri.num li.heads span:nth-child(2) { display: none; }
+  .list.tri.num li.heads span::before { content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 0; }
+  .list.tri.num li.heads .pv::before { background: var(--cobalt); }
+  .list.tri.num li.heads .pa::before { background: var(--crimson); }
+  .list.tri.num li.hit { background: var(--hover); box-shadow: inset 3px 0 0 var(--plum); border-radius: 4px; }
+  .twin > ul + ul { margin-top: 0; }
+  .twin > ul:first-child li:last-child { border-bottom: 1px solid var(--line); }
+  /* the platform tabs live in a bottom bar, in reach of the thumb */
+  .tabs { position: fixed; top: auto; bottom: 0; left: 0; right: 0; z-index: 30; margin: 0; padding: 6px 8px calc(8px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line-2); border-bottom: 0; box-shadow: 0 -8px 24px -18px rgba(26, 22, 20, .35); }
+  .tab { min-height: 56px; padding: 6px 2px 6px; }
+  .brand { padding: 16px 16px 4px; }
+  body { padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
+  .list.tri li.heads { top: 0; }
+  .tab[aria-selected="true"] { background: transparent; border-bottom-color: transparent; position: relative; }
+  .tab[aria-selected="true"]::after { content: ''; position: absolute; top: 0; left: 22%; right: 22%; height: 3px; border-radius: 0 0 3px 3px; background: var(--accent); }
+}
