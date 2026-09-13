@@ -231,6 +231,7 @@
   function show(view) {
     document.querySelectorAll('.tab').forEach(t => { const on = t.dataset.view === view; t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1; });
     document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === view));
+    document.body.dataset.view = view;
     if (!rendered[view]) { RENDER[view](); rendered[view] = true; }
     if (location.hash !== '#' + view) history.replaceState(null, '', '#' + view);
   }

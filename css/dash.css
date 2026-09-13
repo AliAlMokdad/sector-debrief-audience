@@ -1039,3 +1039,23 @@ body {
 .summary > .kpi.hero { min-width: 250px; }
 .summary > .kpi.hero + .kpi.hero { background: linear-gradient(135deg, #4A2B52 0%, #5B3A63 55%, #74507C 100%); }
 .summary > .kpi.hero + .kpi.hero::after { background: radial-gradient(circle at 35% 35%, rgba(200, 154, 60, .26), rgba(200, 154, 60, 0) 70%); }
+
+
+/* painted ground: soft colour fields from the logo, strokes down the whole page, a tint that follows the tab */
+body { background: linear-gradient(180deg, #FBF6EA 0%, #F8F2E4 50%, #F6EFDF 100%); }
+.bg .stroke { opacity: .2; filter: blur(.8px); }
+.bg .s1 { width: 600px; top: -80px; right: -140px; }
+.bg .s2 { width: 540px; top: 130px; right: 30px; }
+.bg .s5 { position: absolute; width: 620px; top: 44%; left: -220px; transform: rotate(9deg); }
+.bg .s6 { position: absolute; width: 520px; top: 66%; right: -160px; transform: rotate(-7deg); }
+.bg .wash { position: absolute; border-radius: 50%; filter: blur(70px); pointer-events: none; }
+.bg .w1 { width: 900px; height: 620px; top: -220px; right: -180px; background: radial-gradient(circle at 50% 50%, rgba(232, 184, 44, .34), rgba(232, 184, 44, 0) 70%); }
+.bg .w2 { width: 760px; height: 560px; top: 22%; left: -260px; background: radial-gradient(circle at 50% 50%, rgba(90, 95, 168, .26), rgba(90, 95, 168, 0) 70%); }
+.bg .w3 { width: 820px; height: 600px; top: 58%; right: -240px; background: radial-gradient(circle at 50% 50%, rgba(176, 64, 90, .18), rgba(176, 64, 90, 0) 70%); }
+.bg .w4 { width: 900px; height: 520px; bottom: -240px; left: 10%; background: radial-gradient(circle at 50% 50%, rgba(200, 154, 60, .26), rgba(200, 154, 60, 0) 70%); }
+.bg .tint { position: absolute; inset: 0; background: radial-gradient(1100px 700px at 8% 12%, var(--tint, rgba(91, 58, 99, .10)), transparent 62%); transition: opacity .5s ease; }
+body[data-view=all] { --tint: rgba(91, 58, 99, .11); }
+body[data-view=video] { --tint: rgba(44, 91, 170, .10); }
+body[data-view=audio] { --tint: rgba(184, 58, 42, .09); }
+body[data-view=website] { --tint: rgba(42, 69, 48, .10); }
+@media print { .bg { display: none; } }
