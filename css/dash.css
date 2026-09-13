@@ -746,3 +746,6 @@ details.tbl caption {
 .chart .end-val { fill: var(--ink); font-size: 13px; font-weight: 600; }
 .summary > .kpi { transition: border-color .2s; }
 .summary > .kpi:hover { border-color: var(--line-2); }
+
+/* cards without a description line keep the same breathing room under the title */
+.card h2 + div { margin-top: 16px; }
