@@ -191,18 +191,20 @@
     V.geography.forEach(g => put(g.name, 'v', g.views / vt * 100));
     A.geography_pct.forEach(g => put(g.name, 'a', g.pct));
     const top = r => Math.max(r.v ?? -1, r.a ?? -1);
-    const rows = [...m.values()].map(r => { const vc = r.v === null ? 0 : Math.round(r.v / 100 * vt), ac = r.a === null ? 0 : Math.ceil(r.a / 100 * at - 1e-9); return { ...r, vc, ac, total: vc + ac }; })
+    // a country YouTube left out of its table can hold at most one view fewer than the smallest country it listed
+    const unlisted = Math.max(0, Math.min(...V.geography.map(g => g.views)) - 1);
+    const rows = [...m.values()].map(r => { const vc = r.v === null ? unlisted : Math.round(r.v / 100 * vt), ac = r.a === null ? 0 : Math.ceil(r.a / 100 * at - 1e-9); return { ...r, vc, ac, total: vc + ac }; })
       .sort((x, y) => y.total - x.total || x.name.localeCompare(y.name));
     rows.forEach((r, i) => { r.id = i; });
     const scale = Math.max(...rows.flatMap(r => [r.v, r.a]).filter(x => x !== null));
     const half = Math.ceil(rows.length / 2);
-    const row = r => `<li id="t-c-${r.id}" data-pin="${r.id}" style="--i:${Math.min(r.id % half, 30)}"><span class="n">${esc(r.name)}</span><span class="c">${r.a === null ? '' : '≈ '}${n(r.total)}</span><span class="v">${r.v === null ? '' : pc(r.v)}</span><span class="v">${r.a === null ? '' : pc(r.a)}</span></li>`;
+    const row = r => `<li id="t-c-${r.id}" data-pin="${r.id}" style="--i:${Math.min(r.id % half, 30)}"><span class="n">${esc(r.name)}</span><span class="c">${r.a === null && r.v !== null ? '' : '≈ '}${n(r.total)}</span><span class="v">${r.v === null ? '' : pc(r.v)}</span><span class="v">${r.a === null ? '' : pc(r.a)}</span></li>`;
     const block = rs => `<ul class="list tri num"><li class="heads"><span></span><span class="pt">Total</span><span class="pv">Video</span><span class="pa">Audio</span></li>${rs.map(row).join('')}</ul>`;
     // the map: a globe outline and graticule as the ground, land in the Equal Earth projection, one pin per country
     let map = '';
     if (WORLD) {
       const R = v => v === null ? 0 : 2.4 + 13 * Math.sqrt(v / scale);
-      const pins = rows.filter(r => WORLD.pins[r.name]).map(r => { const [x, y] = WORLD.pins[r.name]; const t = esc(r.name) + ' · ' + (r.a === null ? '' : '≈ ') + n(r.total) + (r.v !== null ? ' · Video ' + pc(r.v) : '') + (r.a !== null ? ' · Audio ' + pc(r.a) : '');
+      const pins = rows.filter(r => WORLD.pins[r.name]).map(r => { const [x, y] = WORLD.pins[r.name]; const t = esc(r.name) + ' · ' + (r.a === null && r.v !== null ? '' : '≈ ') + n(r.total) + (r.v !== null ? ' · Video ' + pc(r.v) : '') + (r.a !== null ? ' · Audio ' + pc(r.a) : '');
         return `<g class="pin" id="t-p-${r.id}" data-row="${r.id}" tabindex="0" role="button" aria-label="${t}" transform="translate(${x} ${y})"><title>${t}</title>${r.v !== null ? `<circle class="pv" r="${R(r.v).toFixed(1)}"/>` : ''}${r.a !== null ? `<circle class="halo" r="${R(r.a).toFixed(1)}"/><circle class="pa" r="${R(r.a).toFixed(1)}"/>` : ''}<circle class="core" r="1.6"/></g>`; });
       map = `<svg class="map" viewBox="0 0 ${WORLD.w} ${WORLD.h}" role="img" aria-label="World map with a pin for every country that watches or listens; a pin opens its row in the list"><defs><linearGradient id="sea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFDF7" stop-opacity=".9"/><stop offset="1" stop-color="#EEF0FA" stop-opacity=".95"/></linearGradient><linearGradient id="landg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8FA3E3"/><stop offset=".5" stop-color="#A58FD1"/><stop offset="1" stop-color="#D39AB1"/></linearGradient></defs><path class="sea" d="${WORLD.frame}" fill="url(#sea)"/><path class="grat" d="${WORLD.grat}"/><path class="land" d="${WORLD.land}" fill="url(#landg)"/>${pins.join('')}</svg>
       <div class="maplegend"><span><i class="dot"></i>Video</span><span><i class="ring"></i>Audio</span></div>`;
@@ -218,7 +220,7 @@
       card.addEventListener('mouseover', e => { const g = pinOf(e); if (g) g.classList.add('on'); });
       card.addEventListener('mouseout', e => { const g = pinOf(e); if (g) g.classList.remove('on'); });
     }
-    table($('#t-geo-card'), 'Countries by platform', ['Country', 'Total', 'Video views', 'Audio plays and downloads, estimate', 'Video share of views %', 'Audio share of plays and downloads %'], rows.map(r => [r.name, r.total, r.vc, r.ac, r.v === null ? '' : r.v.toFixed(2), r.a === null ? '' : r.a.toFixed(2)]));
+    table($('#t-geo-card'), 'Countries by platform', ['Country', 'Total', 'Video views (countries YouTube did not list: the most they could hold)', 'Audio plays and downloads, estimate rounded up', 'Video share of views %', 'Audio share of plays and downloads %'], rows.map(r => [r.name, r.total, r.vc, r.ac, r.v === null ? '' : r.v.toFixed(2), r.a === null ? '' : r.a.toFixed(2)]));
   }
 
   $('#brand-sub').textContent = `The Sector Debrief · updated ${dm(D.sources[0].exported_at).replace(' Sep ', ' September ')} · updated quarterly`;
