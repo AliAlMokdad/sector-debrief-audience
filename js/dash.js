@@ -209,7 +209,7 @@
     P.age.forEach(b => { const sp = SPOT[b.band]; if (!sp) return; const yrs = sp[1] - sp[0] + 1; for (let y = sp[0]; y <= sp[1]; y++) { const t = bands.find(x => y >= x.lo && y <= x.hi); if (t) t.a += b.pct / yrs; } });
     bands.forEach(b => { b.total = Math.round(b.v / 100 * vt) + Math.round(b.a / 100 * A.spotify_plays); });
     const tmax = Math.max(...bands.map(b => b.total));
-    $('#t-age').innerHTML = `<ul class="list tri tot"><li class="heads"><span></span><span class="pt">Total</span><span class="pv">Video</span><span class="pa">Audio</span></li>${bands.map((b, i) => `<li style="--i:${i}"><span class="n">${esc(b.band)} years</span><span class="tc"><span class="t"><span class="f nz" style="--w:${(b.total / tmax * 100).toFixed(2)}%"></span></span><span class="c">≈ ${n(b.total)}</span></span><span class="v">${pc(b.v)}</span><span class="v">≈ ${pc(b.a)}</span></li>`).join('')}</ul>`;
+    $('#t-age').innerHTML = `<ul class="list tri tot"><li class="heads"><span></span><span class="pt">Total</span><span class="pv">Video</span><span class="pa">Audio</span></li>${bands.map((b, i) => `<li style="--i:${i}"><span class="n">${esc(b.band)} years</span><span class="tc"><span class="t"><span class="f nz" style="--w:${(b.total / tmax * 100).toFixed(2)}%"></span></span><span class="c">≈ ${n(b.total)}</span></span><span class="v pv">${pc(b.v)}</span><span class="v pa">≈ ${pc(b.a)}</span></li>`).join('')}</ul>`;
     table($('#t-age-card'), 'Age by platform', ['Band', 'Total, estimate', 'Video share of views %', 'Audio share of Spotify listeners recast onto YouTube bands %'], bands.map(b => [b.band, b.total, b.v.toFixed(2), b.a.toFixed(2)]));
 
     // countries: one row per country, three shares on one shared scale
