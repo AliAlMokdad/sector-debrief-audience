@@ -246,7 +246,7 @@
   show(viewOf(location.hash));
   if (EMBEDDED) {
     document.documentElement.classList.add('embedded');
-    const report = () => parent.postMessage({ type: 'sd-audience-height', height: document.documentElement.scrollHeight }, '*');
+    const report = () => parent.postMessage({ type: 'sd-audience-height', height: Math.ceil(document.body.getBoundingClientRect().height) }, '*');
     new ResizeObserver(report).observe(document.body);
     addEventListener('load', report);
     document.fonts && document.fonts.ready.then(report);
