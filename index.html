@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>The Sector Debrief · Audience</title>
+<link rel="icon" href="assets/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/dash.css">
+<!--
+ANTI_SLOP_BRIEF
+bold move: none by design. The model is YouTube Studio and Spotify for Creators: plain cards, complete lists with percentages, one colour per platform. Restraint is the decision.
+type: Fraunces only for the page title; Inter with tabular figures for everything else.
+colour: the site's paper (#FAF6EA) and ink (#1A1614); cobalt bars for video, crimson for audio; nothing else coloured except the platform logos.
+content shape: key numbers, then the audience breakdowns first (locations with every country, age and gender, device or app), then the time series. No sentence titles, no annotations, no narrative.
+verifiable: every number comes from data/audience.json, built by build/build_data.py from the exports plus the figures read from the Spotify audience page; the footer names the sources and dates.
+-->
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <img src="assets/icon-192.png" alt="" width="44" height="44">
+      <div><h1>Audience</h1><p id="brand-sub">The Sector Debrief</p></div>
+    </div>
+    <div class="tabs" role="tablist" aria-label="Platform">
+      <button class="tab" role="tab" data-view="video" aria-selected="true" aria-controls="video">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="1.5" y="4.5" width="21" height="15" rx="4.5" fill="#FF0000"/><path d="M10 8.6v6.8l5.6-3.4z" fill="#fff"/></svg>
+        Video
+      </button>
+      <button class="tab" role="tab" data-view="audio" aria-selected="false" aria-controls="audio">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#1ED760"/><path d="M6.3 9.4c3.6-1.1 8.1-.9 11.4.9M7 12.4c3-.9 6.6-.7 9.4.8M7.7 15.2c2.4-.7 5.2-.5 7.4.7" fill="none" stroke="#121212" stroke-width="1.6" stroke-linecap="round"/></svg>
+        Audio
+      </button>
+      <button class="tab" role="tab" data-view="website" aria-selected="false" aria-controls="website">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.6 12.2c0-.7-.1-1.3-.2-1.9H12v3.7h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.3z" fill="#4285F4"/><path d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22z" fill="#34A853"/><path d="M6.4 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.4H3.1A10 10 0 0 0 2 12c0 1.6.4 3.1 1.1 4.6L6.4 14z" fill="#FBBC05"/><path d="M12 6c1.5 0 2.8.5 3.8 1.5l2.9-2.9A10 10 0 0 0 3.1 7.4L6.4 10c.8-2.3 3-4 5.6-4z" fill="#EA4335"/></svg>
+        Website
+      </button>
+    </div>
+  </div>
+</header>
+
+<main>
+<section class="panel active" id="video" data-view="video" role="tabpanel" aria-label="Video">
+  <div class="wrap">
+    <div class="summary" id="v-summary"></div>
+    <div class="grid">
+      <div class="card c5" id="v-geo-card"><h2>Locations</h2><p class="p" id="v-geo-p"></p><div id="v-geo"></div></div>
+      <div class="c4 col">
+        <div class="card" id="v-age-card"><h2>Age and gender</h2><p class="p" id="v-age-p"></p><div id="v-age"></div></div>
+        <div class="card" id="v-dev-card"><h2>Device type</h2><p class="p" id="v-dev-p"></p><div id="v-dev"></div></div>
+      </div>
+      <div class="card c3" id="v-cc-card"><h2>Subtitles</h2><p class="p" id="v-cc-p"></p><div id="v-cc"></div></div>
+      <div class="card c12" id="v-daily-card"><h2>Views</h2><p class="p" id="v-daily-p"></p><div id="v-daily"></div><p class="foot" id="v-daily-foot"></p></div>
+      <div class="card c7" id="v-month-card"><h2>Views by month</h2><p class="p" id="v-month-p"></p><div id="v-month"></div></div>
+      <div class="card c5" id="v-sub-card"><h2>Subscribers</h2><p class="p" id="v-sub-p"></p><div id="v-sub"></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="panel" id="audio" data-view="audio" role="tabpanel" aria-label="Audio">
+  <div class="wrap">
+    <div class="summary" id="a-summary"></div>
+    <div class="grid">
+      <div class="card c5" id="a-geo-card"><h2>Locations</h2><p class="p" id="a-geo-p"></p><div id="a-geo"></div></div>
+      <div class="card c4" id="a-age-card"><h2>Age and gender</h2><p class="p" id="a-age-p"></p><div id="a-age"></div></div>
+      <div class="c3 col">
+        <div class="card" id="a-apps-card"><h2>Listening apps</h2><p class="p" id="a-apps-p"></p><div id="a-apps"></div></div>
+        <div class="card" id="a-dev-card" hidden><h2>Device type</h2><p class="p" id="a-dev-p"></p><div id="a-dev"></div></div>
+      </div>
+      <div class="card c12" id="a-daily-card"><h2>Plays and downloads</h2><p class="p" id="a-daily-p"></p><div id="a-daily"></div><div class="legend" id="a-daily-legend"></div></div>
+      <div class="card c12" id="a-month-card"><h2>By month</h2><p class="p" id="a-month-p"></p><div id="a-month"></div></div>
+    </div>
+  </div>
+</section>
+<section class="panel" id="website" data-view="website" role="tabpanel" aria-label="Website">
+  <div class="wrap">
+    <div class="summary" id="w-summary"></div>
+    <div class="grid">
+      <div class="card c5" id="w-geo-card"><h2>Countries</h2><p class="p" id="w-geo-p"></p><div id="w-geo"></div></div>
+      <div class="c7 col">
+        <div class="card" id="w-dev-card"><h2>Devices</h2><p class="p" id="w-dev-p"></p><div id="w-dev"></div></div>
+        <div class="card" id="w-month-card"><h2>Impressions by month</h2><p class="p" id="w-month-p"></p><div id="w-month"></div></div>
+      </div>
+      <div class="card c12" id="w-daily-card"><h2>Impressions</h2><p class="p" id="w-daily-p"></p><div id="w-daily"></div></div>
+    </div>
+  </div>
+</section>
+</main>
+
+
+<script src="js/dash.js"></script>
+</body>
+</html>

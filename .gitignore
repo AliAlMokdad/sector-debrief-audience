@@ -1,0 +1,7 @@
+review/
+build/*JUDGE*.md
+build/*REVIEW*.md
+build/*.before-codex
+build/patch_*.js
+PLAN.md
+*.jpg
