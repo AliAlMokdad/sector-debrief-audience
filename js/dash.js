@@ -147,9 +147,6 @@
     $('#w-month-p').innerHTML = `Impressions per month`;
     columns($('#w-month'), Wb.monthly, { label: 'Impressions per month', h: 210, note: r => monthNote(r, Wb.period_start, Wb.period_end) });
     table($('#w-month-card'), 'Impressions by month', ['Month', 'Impressions'], Wb.monthly.map(r => [r.month, r.count]));
-    $('#w-daily-p').innerHTML = `Impressions per day · <b>${per}</b>`;
-    daily($('#w-daily'), Wb.daily, { label: 'Impressions per day', h: 190 });
-    table($('#w-daily-card'), 'Impressions per day', ['Date', 'Impressions'], Wb.daily.map(r => [r.date, r.count]));
   }
 
   $('#brand-sub').textContent = `The Sector Debrief · updated ${dm(D.sources[0].exported_at).replace(' Sep ', ' September ')} · updated monthly`;

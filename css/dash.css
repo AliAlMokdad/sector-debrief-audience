@@ -771,3 +771,12 @@ body { position: relative; }
 .kpi .l { color: var(--ochre); }
 .kpi .v { color: var(--plum-deep); }
 .tab[aria-selected="true"] { color: var(--plum-deep); }
+
+
+/* thin titles and subtitles */
+.brand h1 { font-weight: 400; }
+.card h2 { font-weight: 300; font-size: 21px; letter-spacing: 0; }
+.card .p { font-weight: 300; }
+.kpi .l { font-weight: 400; }
+.kpi .v { font-weight: 400; }
+.brand p { font-weight: 300; }
