@@ -39,9 +39,10 @@
     rows.slice(keep).forEach(li => li.classList.add('tail'));
     container.classList.add('trunc');
     const b = document.createElement('button');
-    b.type = 'button'; b.className = 'more'; b.setAttribute('aria-expanded', 'false'); b.setAttribute('aria-label', 'Show all rows');
+    const label = open => { b.setAttribute('aria-expanded', String(open)); b.setAttribute('aria-label', open ? 'Show fewer rows' : 'Show all rows'); };
+    b.type = 'button'; b.className = 'more'; label(false);
     b.innerHTML = `<span class="cnt">+${rows.length - keep}</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-    b.addEventListener('click', () => { const open = container.classList.toggle('open'); b.setAttribute('aria-expanded', String(open)); if (!open) container.scrollIntoView({ block: 'start', behavior: 'smooth' }); });
+    b.addEventListener('click', () => { const open = container.classList.toggle('open'); label(open); if (!open) container.scrollIntoView({ block: 'start', behavior: 'smooth' }); });
     container.insertAdjacentElement('afterend', b);
   }
   // list of label, bar, value. Bars start at a common left edge. scale: 100 for shares, or the largest value for rankings.
@@ -249,7 +250,7 @@
     const card = $('#t-geo-card');
     if (!card.dataset.wired) {
       card.dataset.wired = '1';
-      const go = id => { const li = document.getElementById('t-c-' + id); if (!li) return; const tr = li.closest('.trunc'); if (tr && !tr.classList.contains('open')) { tr.classList.add('open'); const mb = tr.nextElementSibling; if (mb && mb.classList.contains('more')) mb.setAttribute('aria-expanded', 'true'); } card.querySelectorAll('li.hit').forEach(x => x.classList.remove('hit')); li.classList.add('hit'); if (EMBEDDED) { const r = li.getBoundingClientRect(); parent.postMessage({ type: 'sd-audience-scroll', top: r.top + scrollY, height: r.height }, '*'); } else scrollPage(Math.max(0, li.getBoundingClientRect().top + scrollY - Math.max(0, (innerHeight - li.getBoundingClientRect().height) / 2))); clearTimeout(li._t); li._t = setTimeout(() => li.classList.remove('hit'), 2800); };
+      const go = id => { const li = document.getElementById('t-c-' + id); if (!li) return; const tr = li.closest('.trunc'); if (tr && !tr.classList.contains('open')) { tr.classList.add('open'); const mb = tr.nextElementSibling; if (mb && mb.classList.contains('more')) { mb.setAttribute('aria-expanded', 'true'); mb.setAttribute('aria-label', 'Show fewer rows'); } } card.querySelectorAll('li.hit').forEach(x => x.classList.remove('hit')); li.classList.add('hit'); if (EMBEDDED) { const r = li.getBoundingClientRect(); parent.postMessage({ type: 'sd-audience-scroll', top: r.top + scrollY, height: r.height }, '*'); } else scrollPage(Math.max(0, li.getBoundingClientRect().top + scrollY - Math.max(0, (innerHeight - li.getBoundingClientRect().height) / 2))); clearTimeout(li._t); li._t = setTimeout(() => li.classList.remove('hit'), 2800); };
       card.addEventListener('click', e => { const p = e.target.closest('.pin'); if (p) go(p.dataset.row); });
       card.addEventListener('keydown', e => { const p = e.target.closest('.pin'); if (p && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); go(p.dataset.row); } });
       const pinOf = e => { const li = e.target.closest('li[data-pin]'); return li ? document.getElementById('t-p-' + li.dataset.pin) : null; };
