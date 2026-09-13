@@ -796,3 +796,64 @@ body { position: relative; }
 .list.cols li, .list.nums.cols li { grid-template-columns: minmax(0,1fr) minmax(60px,26%) 72px 56px; gap: 12px; }
 .list .n { overflow-wrap: normal; word-break: normal; hyphens: manual; }
 @media (max-width: 1180px) { .list.cols { columns: 2; } }
+
+
+/* thick headlines and subheadlines */
+.c9 { grid-column: span 9; }
+@media (max-width: 1180px) { .c9 { grid-column: span 12; } }
+.brand h1 { font-weight: 600; letter-spacing: -0.015em; }
+.brand p { font-weight: 500; color: var(--ink-mute); }
+.card h2 { font-weight: 600; font-size: 21px; letter-spacing: -0.01em; color: var(--plum-deep); }
+.card .p { font-weight: 500; color: var(--ochre); }
+.kpi .l { font-weight: 600; letter-spacing: .1em; }
+.kpi .v { font-weight: 600; letter-spacing: -0.025em; }
+.tab { font-weight: 600; }
+.list .n { font-weight: 400; }
+.list .c { font-weight: 600; }
+.foot { font-weight: 400; }
+.legend b { font-weight: 600; }
+
+.col { grid-template-rows: auto 1fr; }
+.col .card { display: flex; flex-direction: column; }
+.col .card > div:last-of-type { flex: 1; }
+
+
+/* perfection pass */
+/* the demographic and device lists spread to the height of their row, so every row finishes on one line */
+#v-age-card, #a-age-card, #w-dev-card { display: flex; flex-direction: column; }
+#v-age, #a-age, #w-dev { flex: 1; display: flex; flex-direction: column; }
+#v-age .list, #a-age .list, #w-dev .list { flex: 1; display: flex; flex-direction: column; justify-content: space-evenly; }
+/* country rows: three tracks for three elements; fills are ranked against the leading country, so no full-scale track */
+.list.cols:not(.nums) li { grid-template-columns: minmax(0, 1fr) minmax(90px, 34%) 56px; gap: 12px; }
+.list.cols .t { background: transparent; }
+.list .f.nz { min-width: 2px; }
+/* one type size across the list columns; counts sit level with the labels */
+.list .n, .list .c, .list .v { font-size: 14px; line-height: 20px; }
+.list .c { font-weight: 500; }
+/* shared insets and rhythm */
+.card, .kpi { padding: 20px 24px; background: var(--card); }
+.kpi { min-width: 264px; }
+.summary { gap: 16px; margin-bottom: 24px; }
+.summary > .kpi { transition: none; }
+.summary > .kpi:hover { border-color: var(--line); }
+.summary > .kpi:first-child:hover { border-top-color: var(--accent); }
+.kpi .l { font-size: 12px; line-height: 16px; letter-spacing: .07em; margin-bottom: 8px; }
+.card .p { margin: 8px 0 16px; }
+.foot { margin-top: 16px; padding-top: 16px; }
+.brand p { margin-top: 10px; }
+/* charts */
+.chart .col.part { fill-opacity: .55; }
+.chart .note { font-size: 12px; }
+.chart .end-dot { stroke-width: 1.5; }
+#a-daily .end-dot { stroke: var(--ink-mute); }
+.legend i { width: 16px; height: 2px; border-radius: 0; vertical-align: 3px; }
+/* background strokes anchored to the page, never showing through a card */
+.bg { position: absolute; }
+/* tabs: equal widths, a settled selected state, a contained focus ring */
+.tabs { display: grid; grid-template-columns: repeat(3, 124px); gap: 0; }
+.tab[aria-selected="true"] { background: var(--hover); }
+.tab:focus-visible { outline: 2px solid var(--accent); outline-offset: -4px; }
+@media (max-width: 760px) {
+  .list.cols { columns: 1; }
+  .tabs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}

@@ -43,13 +43,13 @@
     const x = t => m.l + (t - t0) / (t1 - t0) * (W - m.l - m.r), y = v => H - m.b - v / ymax * (H - m.t - m.b);
     for (let i = 0; i <= 4; i++) { const v = ymax / 4 * i; el(s, 'line', { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), class: i ? 'grid' : 'base' }); el(s, 'text', { x: m.l - 8, y: y(v) + 4, 'text-anchor': 'end' }, short(v)); }
     let d = new Date(series[0].date + 'T00:00:00'); d.setDate(1); d.setMonth(d.getMonth() + 1);
-    while (d.getTime() <= t1) { el(s, 'text', { x: x(d.getTime()), y: H - 8, 'text-anchor': 'middle' }, MON[d.getMonth()] + (d.getMonth() === 0 ? ' ' + d.getFullYear() : '')); d.setMonth(d.getMonth() + 1); }
+    while (d.getTime() <= t1) { el(s, 'text', { x: x(d.getTime()), y: H - 8, 'text-anchor': 'middle' }, MON[d.getMonth()] + (d.getMonth() === 0 ? ' ' + String(d.getFullYear()).slice(2) : '')); d.setMonth(d.getMonth() + 1); }
     const path = key => series.map((r, i) => (i ? 'L' : 'M') + x(T(r.date)).toFixed(1) + ',' + y(r[key] || 0).toFixed(1)).join('');
     el(s, 'path', { d: path(total) + `L${x(t1).toFixed(1)},${y(0).toFixed(1)}L${x(t0).toFixed(1)},${y(0).toFixed(1)}Z`, class: 'area' + (part ? ' b' : '') });
     el(s, 'path', { d: path(total), class: 'line' + (part ? ' b' : '') });
     if (part) el(s, 'path', { d: path(part), class: 'line' });
     const lastR = series[series.length - 1], lx = x(t1), ly = y(lastR[total] || 0);
-    el(s, 'circle', { cx: lx, cy: ly, r: 4, class: 'end-dot' });
+    el(s, 'circle', { cx: lx, cy: ly, r: 3, class: 'end-dot' });
     if ((lastR[total] || 0) > 0) el(s, 'text', { x: lx - 8, y: Math.max(m.t + 10, ly - 10), 'text-anchor': 'end', class: 'end-val' }, n(lastR[total]));
     host.appendChild(s);
   }
@@ -59,14 +59,14 @@
     host.innerHTML = '';
     const W = width(host), H = opts.h || 200, m = { l: 4, r: 4, t: 24, b: 38 };
     const s = el(document.createDocumentFragment(), 'svg', { viewBox: `0 0 ${W} ${H}`, width: W, height: H, class: 'chart', role: 'img', 'aria-label': opts.label || '' });
-    const max = Math.max(1, ...rows.map(r => r.count)), gap = 12, bw = (W - m.l - m.r - gap * (rows.length - 1)) / rows.length;
+    const max = Math.max(1, ...rows.map(r => r.count)), slot = Math.min(168, (W - m.l - m.r) / rows.length), bw = Math.min(96, slot * .72), x0 = m.l + (W - m.l - m.r - slot * rows.length) / 2;
     const y = v => H - m.b - v / max * (H - m.t - m.b);
     el(s, 'line', { x1: m.l, x2: W - m.r, y1: y(0), y2: y(0), class: 'base' });
     rows.forEach((r, i) => {
-      const xx = m.l + i * (bw + gap), note = opts.note ? opts.note(r) : '';
+      const xx = x0 + (i + .5) * slot - bw / 2, note = opts.note ? opts.note(r) : '';
       el(s, 'rect', { x: xx, y: y(r.count), width: bw, height: Math.max(0, y(0) - y(r.count)), rx: 2, class: 'col' + (note ? ' part' : '') });
       el(s, 'text', { x: xx + bw / 2, y: y(r.count) - 6, 'text-anchor': 'middle', class: 'val' }, n(r.count));
-      el(s, 'text', { x: xx + bw / 2, y: H - 22, 'text-anchor': 'middle' }, MON[+r.month.slice(5) - 1] + ' ' + r.month.slice(0, 4));
+      el(s, 'text', { x: xx + bw / 2, y: H - 22, 'text-anchor': 'middle' }, MON[+r.month.slice(5) - 1] + (slot < 90 ? ' ' + r.month.slice(2, 4) : ' ' + r.month.slice(0, 4)));
       if (note) el(s, 'text', { x: xx + bw / 2, y: H - 7, 'text-anchor': 'middle', class: 'note' }, note);
     });
     host.appendChild(s);
@@ -97,19 +97,18 @@
     table($('#v-dev-card'), 'Views by device type', ['Device', 'Views'], V.devices.map(d => [d.name, d.views]).concat([['Not reported', V.devices_other]]));
 
     $('#v-daily-p').innerHTML = `Views per day · <b>${vPeriod}</b>`;
-    daily($('#v-daily'), V.daily, { label: 'Views per day', h: 190 });
+    daily($('#v-daily'), V.daily, { label: 'Views per day', h: 230 });
     $('#v-daily-foot').innerHTML = `YouTube's totals table reports <b>${n(tot)}</b> views; its daily table sums to ${n(V.daily_series_sum)}.`;
     table($('#v-daily-card'), 'Views per day', ['Date', 'Views'], V.daily.map(r => [r.date, r.count]));
 
     list($('#v-cc'), V.captions.map(c => ({ label: c.name, v: c.views / tot * 100, count: c.views, text: pc(c.views / tot * 100) })).concat([{ sep: true }, { label: 'Not reported', v: V.captions_other / tot * 100, count: V.captions_other, text: pc(V.captions_other / tot * 100), muted: true }]), { small: true, tight: true });
     table($('#v-cc-card'), 'Views by subtitle language', ['Captions', 'Views'], V.captions.map(c => [c.name, c.views]).concat([['Not reported', V.captions_other]]));
 
-    $('#v-month-p').innerHTML = `Views per month`;
-    columns($('#v-month'), V.monthly, { label: 'Views per month', h: 230, note: r => monthNote(r, V.period_start, V.period_end) });
+    columns($('#v-month'), V.monthly, { label: 'Views per month', h: 269, note: r => monthNote(r, V.period_start, V.period_end) });
     table($('#v-month-card'), 'Views by month', ['Month', 'Views'], V.monthly.map(r => [r.month, r.count]));
 
     $('#v-sub-p').innerHTML = `Subscribers · <b>${vPeriod}</b>`;
-    daily($('#v-sub'), V.subscriber_series.map(r => ({ date: r.date, count: r.subscribers })), { label: 'Subscribers over time', h: 190 });
+    daily($('#v-sub'), V.subscriber_series.map(r => ({ date: r.date, count: r.subscribers })), { label: 'Subscribers over time', h: 216 });
     table($('#v-sub-card'), 'Subscribers by day', ['Date', 'Subscribers'], V.subscriber_series.map(r => [r.date, r.subscribers]));
   }
 
@@ -117,9 +116,7 @@
     const tot = A.total_plays_downloads, P = A.audience_page;
     $('#a-summary').innerHTML = kpi('Plays and downloads', n(tot), aPeriod) + kpi('On Spotify', n(A.spotify_plays), pc(A.spotify_plays / tot * 100) + ' of the total') + kpi('Downloads in other apps', n(A.other_downloads), pc(A.other_downloads / tot * 100) + ' of the total, via the RSS feed');
 
-    list($('#a-geo'), A.geography_pct.map(g => ({ label: g.name, v: g.pct, count: Math.round(g.pct / 100 * tot), est: true, text: pc(g.pct) })), { small: true, cols: true, scale: 'max' });
-    $('#a-geo-card').querySelectorAll('.foot').forEach(x => x.remove());
-    $('#a-geo-card').insertAdjacentHTML('beforeend', `<p class="foot">Counts marked ≈ are the share applied to all ${n(tot)} plays and downloads.</p>`);
+    list($('#a-geo'), A.geography_pct.map(g => ({ label: g.name, v: g.pct, text: pc(g.pct) })), { small: true, cols: true, scale: 'max' });
     table($('#a-geo-card'), 'Audio by country', ['Country', 'Share %'], A.geography_pct.map(g => [g.name, g.pct.toFixed(2)]));
 
     $('#a-age-p').innerHTML = `Spotify listeners, all time · Spotify audience page`;
@@ -137,21 +134,17 @@
     $('#a-daily-legend').innerHTML = `<span><i style="background:var(--ink-mute)"></i>Plays and downloads, all platforms <b>${n(tot)}</b></span><span><i style="background:var(--crimson)"></i>Of which plays on Spotify <b>${n(A.spotify_plays)}</b></span>`;
     table($('#a-daily-card'), 'Plays and downloads per day', ['Date', 'All platforms', 'On Spotify'], split.map(r => [r.date, r.total, r.spotify]));
 
-    $('#a-month-p').innerHTML = `Plays and downloads per month`;
-    columns($('#a-month'), A.monthly, { label: 'Plays and downloads per month', h: 230, note: r => monthNote(r, A.period_start, A.period_end) });
-    table($('#a-month-card'), 'Audio by month', ['Month', 'Count'], A.monthly.map(r => [r.month, r.count]));
   }
 
   function renderWebsite() {
     const Wb = D.website; if (!Wb) return;
     const tot = Wb.total_impressions, per = `${dm(Wb.period_start)} to ${dm(Wb.period_end)}`;
     $('#w-summary').innerHTML = kpi('Impressions in Google Search', n(tot), `${per} · the export's ${Wb.window.toLowerCase()} window`);
-    list($('#w-geo'), Wb.countries.map(g => ({ label: g.name, v: g.impressions / tot * 100, count: g.impressions, text: pc(g.impressions / tot * 100) })), { small: true, cols: true, scale: 'max' });
+    list($('#w-geo'), Wb.countries.map(g => ({ label: g.name, v: g.impressions / tot * 100, text: pc(g.impressions / tot * 100) })), { small: true, cols: true, scale: 'max' });
     table($('#w-geo-card'), 'Impressions by country', ['Country', 'Impressions', 'Share %'], Wb.countries.map(g => [g.name, g.impressions, (g.impressions / tot * 100).toFixed(2)]));
-    list($('#w-dev'), Wb.devices.map(d => ({ label: d.name, v: d.impressions / tot * 100, count: d.impressions, text: pc(d.impressions / tot * 100) })));
+    list($('#w-dev'), Wb.devices.map(d => ({ label: d.name, v: d.impressions / tot * 100, text: pc(d.impressions / tot * 100) })));
     table($('#w-dev-card'), 'Impressions by device', ['Device', 'Impressions'], Wb.devices.map(d => [d.name, d.impressions]));
-    $('#w-month-p').innerHTML = `Impressions per month`;
-    columns($('#w-month'), Wb.monthly, { label: 'Impressions per month', h: 210, note: r => monthNote(r, Wb.period_start, Wb.period_end) });
+    columns($('#w-month'), Wb.monthly, { label: 'Impressions per month', h: 176, note: r => monthNote(r, Wb.period_start, Wb.period_end) });
     table($('#w-month-card'), 'Impressions by month', ['Month', 'Impressions'], Wb.monthly.map(r => [r.month, r.count]));
   }
 
